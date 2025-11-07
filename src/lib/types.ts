@@ -13,6 +13,7 @@ export interface Transaction {
   category: string;
   date: string;
   moneySourceId: string;
+  type: 'income' | 'expense';
 }
 
 export interface FeaturedTransaction {

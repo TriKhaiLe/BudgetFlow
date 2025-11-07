@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useBudget } from '@/contexts/budget-context';
 import type { MoneySource } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -41,15 +41,32 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, PlusCircle, Trash, Pen } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Pen, Edit } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '../ui/badge';
 
 const moneySourceSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
-  budget: z.coerce.number().positive('Budget must be a positive number.'),
-  balance: z.coerce.number().min(0, 'Balance must be non-negative.'),
+  budget: z.string().refine(value => !isNaN(parseFormattedNumber(value)) && parseFormattedNumber(value) > 0, {
+    message: "Budget must be a positive number.",
+  }),
+  balance: z.string().refine(value => !isNaN(parseFormattedNumber(value)), {
+    message: "Balance must be a valid number.",
+  }),
 });
+
+
+function FormattedInput({ field, placeholder }: { field: any, placeholder?: string }) {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const rawValue = e.target.value.replace(/,/g, '');
+      if (!isNaN(Number(rawValue))) {
+        field.onChange(formatNumberWithCommas(rawValue));
+      }
+    };
+  
+    return <Input placeholder={placeholder} {...field} onChange={handleInputChange} />;
+}
 
 function MoneySourceForm({
   source,
@@ -64,17 +81,23 @@ function MoneySourceForm({
     resolver: zodResolver(moneySourceSchema),
     defaultValues: {
       name: source?.name || '',
-      budget: source?.budget || 0,
-      balance: source?.balance || 0,
+      budget: source ? formatNumberWithCommas(source.budget) : '0',
+      balance: source ? formatNumberWithCommas(source.balance) : '0',
     },
   });
 
   function onSubmit(values: z.infer<typeof moneySourceSchema>) {
+    const numericValues = {
+        name: values.name,
+        budget: parseFormattedNumber(values.budget),
+        balance: parseFormattedNumber(values.balance),
+    }
+
     if (source) {
-      dispatch({ type: 'UPDATE_MONEY_SOURCE', payload: { ...source, ...values } });
+      dispatch({ type: 'UPDATE_MONEY_SOURCE', payload: { ...source, ...numericValues } });
       toast({ title: 'Success', description: 'Money source updated.' });
     } else {
-      dispatch({ type: 'ADD_MONEY_SOURCE', payload: values });
+      dispatch({ type: 'ADD_MONEY_SOURCE', payload: numericValues });
       toast({ title: 'Success', description: 'Money source added.' });
     }
     onFinished();
@@ -104,7 +127,7 @@ function MoneySourceForm({
               <FormItem>
                 <FormLabel>Monthly Budget</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="500" {...field} />
+                  <FormattedInput field={field} placeholder="500" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,7 +140,7 @@ function MoneySourceForm({
               <FormItem>
                 <FormLabel>Current Balance</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="1200" {...field} />
+                  <FormattedInput field={field} placeholder="1,200" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -156,6 +179,91 @@ function AddEditMoneySourceDialog({
   );
 }
 
+const updateBalanceSchema = z.object({
+    newBalance: z.string().refine(val => !isNaN(parseFormattedNumber(val)), {
+        message: "Please enter a valid number.",
+    }),
+});
+
+function UpdateBalanceDialog({ source }: { source: MoneySource }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const { dispatch } = useBudget();
+    const { toast } = useToast();
+
+    const form = useForm<z.infer<typeof updateBalanceSchema>>({
+        resolver: zodResolver(updateBalanceSchema),
+        defaultValues: { newBalance: formatNumberWithCommas(source.balance) }
+    });
+    
+    const newBalanceValue = form.watch('newBalance');
+    const parsedNewBalance = parseFormattedNumber(newBalanceValue);
+    const difference = parsedNewBalance - source.balance;
+
+    function onSubmit(values: z.infer<typeof updateBalanceSchema>) {
+        const newBalance = parseFormattedNumber(values.newBalance);
+        dispatch({
+            type: 'ADJUST_BALANCE',
+            payload: {
+                moneySourceId: source.id,
+                newBalance,
+                oldBalance: source.balance,
+                sourceName: source.name
+            }
+        });
+        toast({ title: 'Success', description: `${source.name} balance updated.`});
+        setIsOpen(false);
+    }
+    
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Edit className="mr-2 h-4 w-4" /> Update Balance
+                </DropdownMenuItem>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Update Balance for {source.name}</DialogTitle>
+                    <DialogDescription>
+                        Directly set the new balance for this money source. This will be logged in your history.
+                    </DialogDescription>
+                </DialogHeader>
+                 <div className="grid grid-cols-2 gap-4 py-4 text-center">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Before</p>
+                        <p className="font-bold text-lg">{formatCurrency(source.balance)}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">After</p>
+                        <p className="font-bold text-lg">{formatCurrency(isNaN(parsedNewBalance) ? source.balance : parsedNewBalance)}</p>
+                    </div>
+                </div>
+                 <div className="py-2 text-center">
+                    <p className="text-sm text-muted-foreground">Difference</p>
+                    <Badge variant={difference === 0 ? "outline" : difference > 0 ? "default" : "destructive"} className="text-lg">
+                      {difference > 0 ? '+' : ''}{formatCurrency(isNaN(difference) ? 0 : difference)}
+                    </Badge>
+                </div>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField control={form.control} name="newBalance" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>New Balance</FormLabel>
+                                <FormControl>
+                                    <FormattedInput field={field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <DialogFooter>
+                            <Button type="submit">Confirm Update</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 export default function MoneySources() {
   const { state, dispatch } = useBudget();
@@ -214,9 +322,10 @@ export default function MoneySources() {
                             <DropdownMenuContent>
                                 <AddEditMoneySourceDialog source={source}>
                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <Pen className="mr-2 h-4 w-4" /> Edit
+                                        <Pen className="mr-2 h-4 w-4" /> Edit Source
                                     </DropdownMenuItem>
                                 </AddEditMoneySourceDialog>
+                                <UpdateBalanceDialog source={source} />
                                 <DropdownMenuItem onClick={() => handleDelete(source)} className="text-destructive">
                                     <Trash className="mr-2 h-4 w-4" /> Delete
                                 </DropdownMenuItem>

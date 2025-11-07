@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useBudget } from '@/contexts/budget-context';
 import type { Transaction, FeaturedTransaction } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -49,23 +49,41 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Trash, MoreHorizontal, Loader2, Sparkles, Pen } from 'lucide-react';
+import { PlusCircle, Trash, Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { suggestTransactionCategories } from '@/ai/flows/suggest-transaction-categories';
 import { Badge } from '../ui/badge';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Label } from '../ui/label';
+
+function FormattedInput({ field, placeholder, onButtonClick }: { field: any, placeholder?: string, onButtonClick?: (value: string) => void }) {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const rawValue = e.target.value.replace(/,/g, '');
+      if (/^\d*$/.test(rawValue)) { // only allow digits
+        field.onChange(formatNumberWithCommas(rawValue));
+      }
+    };
+  
+    return (
+      <div className="relative">
+        <Input placeholder={placeholder} {...field} onChange={handleInputChange} />
+        {onButtonClick && (
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('00')}>00</Button>
+                <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('000')}>000</Button>
+            </div>
+        )}
+      </div>
+    );
+}
 
 const transactionSchema = z.object({
   description: z.string().min(2, 'Description is required.'),
-  amount: z.coerce.number().refine(n => n !== 0, 'Amount cannot be zero.'),
+  amount: z.string().refine(val => parseFormattedNumber(val) > 0, 'Amount must be greater than zero.'),
   category: z.string().min(2, 'Category is required.'),
   moneySourceId: z.string().min(1, 'Please select a money source.'),
+  type: z.enum(['income', 'expense']),
 });
-
-const featuredTransactionSchema = z.object({
-    description: z.string().min(2, "Description is required."),
-    category: z.string().min(2, "Category is required."),
-});
-
 
 function AddTransactionDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -77,7 +95,7 @@ function AddTransactionDialog() {
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { description: '', amount: 0, category: '', moneySourceId: '' },
+    defaultValues: { description: '', amount: '0', category: '', moneySourceId: '', type: 'expense' },
   });
 
   const description = form.watch('description');
@@ -105,7 +123,10 @@ function AddTransactionDialog() {
 
 
   function onSubmit(values: z.infer<typeof transactionSchema>) {
-    dispatch({ type: 'ADD_TRANSACTION', payload: values });
+    dispatch({ type: 'ADD_TRANSACTION', payload: {
+        ...values,
+        amount: parseFormattedNumber(values.amount)
+    } });
     toast({ title: 'Success', description: 'Transaction added.' });
     form.reset();
     setSuggestions([]);
@@ -127,6 +148,32 @@ function AddTransactionDialog() {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Transaction Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl><RadioGroupItem value="expense" /></FormControl>
+                        <FormLabel className="font-normal">Expense</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl><RadioGroupItem value="income" /></FormControl>
+                        <FormLabel className="font-normal">Income</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>
@@ -138,7 +185,13 @@ function AddTransactionDialog() {
               <FormField control={form.control} name="amount" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
-                  <FormControl><Input type="number" step="0.01" placeholder="-55.50" {...field} /></FormControl>
+                   <FormControl>
+                      <FormattedInput
+                        field={field}
+                        placeholder="55"
+                        onButtonClick={(value) => field.onChange(field.value + value)}
+                      />
+                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -166,7 +219,7 @@ function AddTransactionDialog() {
               {suggestions.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   <div className="text-sm font-medium flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4 text-primary" /> Suggestions:</div>
-                  {suggestions.map(s => <Button key={s} size="sm" variant="outline" onClick={() => form.setValue('category', s)}>{s}</Button>)}
+                  {suggestions.map(s => <Button key={s} size="sm" variant="outline" type="button" onClick={() => form.setValue('category', s)}>{s}</Button>)}
                 </div>
               )}
             <DialogFooter>
@@ -178,6 +231,11 @@ function AddTransactionDialog() {
     </Dialog>
   );
 }
+
+const featuredTransactionSchema = z.object({
+    description: z.string().min(2, "Description is required."),
+    category: z.string().min(2, "Category is required."),
+});
 
 function AddFeaturedTransactionDialog() {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -292,8 +350,8 @@ export default function TransactionsView() {
                         <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
                         <TableCell>{state.moneySources.find(ms => ms.id === t.moneySourceId)?.name || 'N/A'}</TableCell>
                         <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
-                        <TableCell className={`text-right ${t.amount > 0 ? 'text-green-600' : 'text-destructive'}`}>
-                          {formatCurrency(t.amount)}
+                        <TableCell className={`text-right ${t.type === 'income' ? 'text-green-600' : 'text-destructive'}`}>
+                          {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end">

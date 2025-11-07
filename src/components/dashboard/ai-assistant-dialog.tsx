@@ -27,8 +27,9 @@ import { useBudget } from '@/contexts/budget-context';
 import { useToast } from '@/hooks/use-toast';
 import { aiAssistedBudgetUpdates } from '@/ai/flows/ai-assisted-budget-updates';
 import { Loader2, Sparkles } from 'lucide-react';
-import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { formatCurrency } from '@/lib/utils';
+import { Badge } from '../ui/badge';
 
 const aiSchema = z.object({
   description: z.string().min(10, 'Please describe your transaction in more detail.'),
@@ -37,6 +38,7 @@ const aiSchema = z.object({
 type AiSuggestion = {
   category: string;
   amount: number;
+  type: 'income' | 'expense';
 };
 
 export function AIAssistantDialog() {
@@ -64,7 +66,11 @@ export function AIAssistantDialog() {
       const amount = parseFloat(amountStr);
 
       if (category && !isNaN(amount)) {
-        setSuggestion({ category, amount });
+        setSuggestion({
+          category,
+          amount: Math.abs(amount),
+          type: amount >= 0 ? 'income' : 'expense',
+        });
       } else {
         toast({
           variant: 'destructive',
@@ -94,6 +100,7 @@ export function AIAssistantDialog() {
         amount: suggestion.amount,
         category: suggestion.category,
         moneySourceId: values.moneySourceId,
+        type: suggestion.type,
       },
     });
 
@@ -153,9 +160,21 @@ export function AIAssistantDialog() {
             <form onSubmit={confirmForm.handleSubmit(onConfirm)} className="space-y-4">
                 <div className="rounded-lg border bg-card text-card-foreground p-4 space-y-2">
                     <h4 className="font-semibold">AI Suggestion</h4>
-                    <p><strong>Category:</strong> {suggestion.category}</p>
-                    <p><strong>Amount:</strong> {suggestion.amount}</p>
-                    <p><strong>Description:</strong> {form.getValues('description')}</p>
+                    <div className="flex justify-between items-center">
+                        <span>Type:</span>
+                        <Badge variant={suggestion.type === 'income' ? 'default' : 'secondary'}>{suggestion.type}</Badge>
+                    </div>
+                     <div className="flex justify-between items-center">
+                        <span>Category:</span>
+                        <span className='font-medium'>{suggestion.category}</span>
+                    </div>
+                     <div className="flex justify-between items-center">
+                        <span>Amount:</span>
+                        <span className={`font-medium ${suggestion.type === 'income' ? 'text-green-600' : 'text-destructive'}`}>
+                            {suggestion.type === 'income' ? '+' : '-'}{formatCurrency(suggestion.amount)}
+                        </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground pt-2"><strong>Original:</strong> {form.getValues('description')}</p>
                 </div>
                 
                 <FormField control={confirmForm.control} name="moneySourceId" render={({ field }) => (
