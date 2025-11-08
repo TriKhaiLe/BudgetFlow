@@ -57,15 +57,25 @@ const moneySourceSchema = z.object({
 });
 
 
-function FormattedInput({ field, placeholder }: { field: any, placeholder?: string }) {
+function FormattedInput({ field, placeholder, onButtonClick }: { field: any, placeholder?: string, onButtonClick?: (value: string) => void }) {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const rawValue = e.target.value.replace(/,/g, '');
-      if (!isNaN(Number(rawValue))) {
+      if (/^\d*\.?\d*$/.test(rawValue)) { // Allow digits and one decimal point
         field.onChange(formatNumberWithCommas(rawValue));
       }
     };
   
-    return <Input placeholder={placeholder} {...field} onChange={handleInputChange} />;
+    return (
+        <div className="relative">
+            <Input placeholder={placeholder} {...field} onChange={handleInputChange} />
+            {onButtonClick && (
+                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
+                    <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('00')}>00</Button>
+                    <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('000')}>000</Button>
+                </div>
+            )}
+        </div>
+    );
 }
 
 function MoneySourceForm({
@@ -127,7 +137,11 @@ function MoneySourceForm({
               <FormItem>
                 <FormLabel>Monthly Budget</FormLabel>
                 <FormControl>
-                  <FormattedInput field={field} placeholder="500" />
+                  <FormattedInput 
+                    field={field} 
+                    placeholder="500" 
+                    onButtonClick={(value) => field.onChange((field.value || '') + value)}
+                    />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -140,7 +154,11 @@ function MoneySourceForm({
               <FormItem>
                 <FormLabel>Current Balance</FormLabel>
                 <FormControl>
-                  <FormattedInput field={field} placeholder="1,200" />
+                  <FormattedInput 
+                    field={field} 
+                    placeholder="1,200"
+                    onButtonClick={(value) => field.onChange((field.value || '') + value)}
+                    />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -206,8 +224,6 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
             payload: {
                 moneySourceId: source.id,
                 newBalance,
-                oldBalance: source.balance,
-                sourceName: source.name
             }
         });
         toast({ title: 'Success', description: `${source.name} balance updated.`});
@@ -248,7 +264,10 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
                             <FormItem>
                                 <FormLabel>New Balance</FormLabel>
                                 <FormControl>
-                                    <FormattedInput field={field} />
+                                    <FormattedInput 
+                                      field={field} 
+                                      onButtonClick={(value) => field.onChange((field.value || '') + value)}
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

@@ -11,13 +11,13 @@ type Action =
   | { type: 'ADD_MONEY_SOURCE'; payload: Omit<MoneySource, 'id' | 'spent'> }
   | { type: 'UPDATE_MONEY_SOURCE'; payload: MoneySource }
   | { type: 'DELETE_MONEY_SOURCE'; payload: string }
-  | { type: 'ADD_TRANSACTION'; payload: Omit<Transaction, 'id' | 'date'> }
+  | { type: 'ADD_TRANSACTION'; payload: Omit<Transaction, 'id'> }
   | { type: 'UPDATE_TRANSACTION'; payload: Transaction }
   | { type: 'DELETE_TRANSACTION'; payload: Transaction }
   | { type: 'ADD_FEATURED_TRANSACTION'; payload: Omit<FeaturedTransaction, 'id'|'date'> }
   | { type: 'DELETE_FEATURED_TRANSACTION'; payload: string }
   | { type: 'IMPORT_DATA'; payload: { state: BudgetState; strategy: 'REPLACE' | 'NEXT_MONTH' } }
-  | { type: 'ADJUST_BALANCE'; payload: { moneySourceId: string; newBalance: number; oldBalance: number; sourceName: string } };
+  | { type: 'ADJUST_BALANCE'; payload: { moneySourceId: string; newBalance: number } };
 
 const initialState: BudgetState = {
   moneySources: [],
@@ -67,20 +67,25 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
     }
 
     case 'ADJUST_BALANCE': {
-      const { moneySourceId, newBalance, oldBalance, sourceName } = action.payload;
+      const { moneySourceId, newBalance } = action.payload;
+      const source = state.moneySources.find(ms => ms.id === moneySourceId);
+      if (!source) return state;
+      
+      const oldBalance = source.balance;
       const difference = newBalance - oldBalance;
+
       return {
         ...state,
         moneySources: state.moneySources.map(ms =>
           ms.id === moneySourceId
-            ? { ...ms, balance: newBalance }
+            ? { ...ms, balance: newBalance, spent: ms.budget - newBalance }
             : ms
         ),
         history: [
           ...state.history,
           {
             id: crypto.randomUUID(),
-            description: `Adjusted balance for ${sourceName} from ${oldBalance} to ${newBalance} (Difference: ${difference}).`,
+            description: `Adjusted balance for ${source.name} from ${formatCurrency(oldBalance)} to ${formatCurrency(newBalance)} (Difference: ${difference > 0 ? '+' : ''}${formatCurrency(difference)}).`,
             timestamp: new Date().toISOString(),
           },
         ],
@@ -111,7 +116,6 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
       const newTransaction: Transaction = {
         ...action.payload,
         id: crypto.randomUUID(),
-        date: new Date().toISOString(),
       };
       const { amount, moneySourceId, type } = newTransaction;
       const signedAmount = type === 'income' ? amount : -amount;
@@ -124,7 +128,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
             ? {
                 ...ms,
                 balance: ms.balance + signedAmount,
-                budget: ms.budget + (type === 'income' ? amount : 0),
+                budget: type === 'income' ? ms.budget + amount : ms.budget,
                 spent: type === 'expense' ? ms.spent + amount : ms.spent,
               }
             : ms
@@ -133,7 +137,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
           ...state.history,
           {
             id: crypto.randomUUID(),
-            description: `Transaction: ${newTransaction.description} (${signedAmount > 0 ? '+' : ''}${signedAmount})`,
+            description: `Transaction: ${newTransaction.description} (${signedAmount > 0 ? '+' : ''}${formatCurrency(signedAmount)})`,
             timestamp: new Date().toISOString(),
           },
         ],
@@ -264,6 +268,16 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 };
 
 const BudgetContext = createContext<{ state: BudgetState; dispatch: Dispatch<Action> } | undefined>(undefined);
+
+// Helper function to format currency for logs
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+};
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(budgetReducer, initialState);

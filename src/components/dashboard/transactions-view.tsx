@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useBudget } from '@/contexts/budget-context';
 import type { Transaction, FeaturedTransaction } from '@/lib/types';
-import { formatCurrency, formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
+import { formatCurrency, formatNumberWithCommas, parseFormattedNumber, getCategoryColor } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -49,18 +49,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Trash, Loader2, Sparkles, Heart, FilePlus, FileMinus, History, Wrench, CircleDollarSign, Download } from 'lucide-react';
+import { PlusCircle, Trash, Loader2, Sparkles, Heart, FilePlus, FileMinus, History, Wrench, CircleDollarSign, Download, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { suggestTransactionCategories } from '@/ai/flows/suggest-transaction-categories';
 import { Badge } from '../ui/badge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { Combobox } from '../ui/combobox';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { Calendar } from '../ui/calendar';
 
 function FormattedInput({ field, placeholder, onButtonClick }: { field: any, placeholder?: string, onButtonClick?: (value: string) => void }) {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const rawValue = e.target.value.replace(/,/g, '');
-      if (/^\d*$/.test(rawValue)) { // only allow digits
+      if (/^\d*\.?\d*$/.test(rawValue)) { // allow digits and one decimal point
         field.onChange(formatNumberWithCommas(rawValue));
       }
     };
@@ -81,9 +85,10 @@ function FormattedInput({ field, placeholder, onButtonClick }: { field: any, pla
 const transactionSchema = z.object({
   description: z.string().min(2, 'Description is required.'),
   amount: z.string().refine(val => parseFormattedNumber(val) > 0, 'Amount must be greater than zero.'),
-  category: z.string().min(2, 'Category is required.'),
+  category: z.string().optional(),
   moneySourceId: z.string().min(1, 'Please select a money source.'),
   type: z.enum(['income', 'expense']),
+  date: z.date(),
 });
 
 const categorySuggestions = [
@@ -104,54 +109,27 @@ function AddTransactionDialog() {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
 
-  const [suggestions, setSuggestions] = React.useState<string[]>([]);
-  const [isSuggesting, setIsSuggesting] = React.useState(false);
-
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { description: '', amount: '', category: '', moneySourceId: '', type: 'expense' },
+    defaultValues: { description: '', amount: '', category: '', moneySourceId: '', type: 'income', date: new Date() },
   });
-
-  const description = form.watch('description');
-
-  React.useEffect(() => {
-    const handleCategorySuggestion = async () => {
-      if (description && description.length > 3) {
-        setIsSuggesting(true);
-        try {
-          const result = await suggestTransactionCategories({ description });
-          setSuggestions(result.categories);
-        } catch (error) {
-          console.error("Failed to get category suggestions:", error);
-        } finally {
-          setIsSuggesting(false);
-        }
-      } else {
-        setSuggestions([]);
-      }
-    };
-
-    const debounce = setTimeout(handleCategorySuggestion, 500);
-    return () => clearTimeout(debounce);
-  }, [description]);
-
 
   function onSubmit(values: z.infer<typeof transactionSchema>) {
     dispatch({ type: 'ADD_TRANSACTION', payload: {
         ...values,
-        amount: parseFormattedNumber(values.amount)
+        amount: parseFormattedNumber(values.amount),
+        category: values.category || 'Withdraw BIDV',
+        date: values.date.toISOString(),
     } });
     toast({ title: 'Success', description: 'Transaction added.' });
     form.reset();
-    setSuggestions([]);
     setIsOpen(false);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
         if (!open) {
-            form.reset({ description: '', amount: '', category: '', moneySourceId: '', type: 'expense' });
-            setSuggestions([]);
+            form.reset({ description: '', amount: '', category: '', moneySourceId: '', type: 'income', date: new Date() });
         }
         setIsOpen(open);
     }}>
@@ -181,12 +159,12 @@ function AddTransactionDialog() {
                       className="flex space-x-4"
                     >
                       <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl><RadioGroupItem value="expense" /></FormControl>
-                        <FormLabel className="font-normal">Expense</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-2 space-y-0">
                         <FormControl><RadioGroupItem value="income" /></FormControl>
                         <FormLabel className="font-normal">Income</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl><RadioGroupItem value="expense" /></FormControl>
+                        <FormLabel className="font-normal">Expense</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -209,7 +187,7 @@ function AddTransactionDialog() {
                       <FormattedInput
                         field={field}
                         placeholder="55"
-                        onButtonClick={(value) => field.onChange((field.value || '') + value)}
+                        onButtonClick={(value) => field.onChange(formatNumberWithCommas((parseFormattedNumber(field.value) || 0).toString() + value))}
                       />
                    </FormControl>
                   <FormMessage />
@@ -228,25 +206,61 @@ function AddTransactionDialog() {
                 </FormItem>
               )} />
             </div>
-            <FormField control={form.control} name="category" render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Category</FormLabel>
-                    <Combobox
-                        options={categorySuggestions}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select or type a category..."
-                    />
-                  <FormMessage />
-                </FormItem>
-              )} />
-              {isSuggesting && <div className="flex items-center text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Thinking...</div>}
-              {suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  <div className="text-sm font-medium flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4 text-primary" /> AI Suggestions:</div>
-                  {suggestions.map(s => <Button key={s} size="sm" variant="outline" type="button" onClick={() => form.setValue('category', s)}>{s}</Button>)}
-                </div>
-              )}
+             <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="category" render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Category</FormLabel>
+                        <Combobox
+                            options={categorySuggestions}
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            placeholder="Select or type a category..."
+                        />
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                        <FormLabel>Transaction Date</FormLabel>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                )}
+                                >
+                                {field.value ? (
+                                    format(field.value, "PPP")
+                                ) : (
+                                    <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                            </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                date > new Date() || date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                            />
+                            </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+             </div>
             <DialogFooter>
               <Button type="submit">Add Transaction</Button>
             </DialogFooter>
@@ -316,7 +330,7 @@ function AddFeaturedTransactionDialog() {
                                     <FormattedInput
                                         field={field}
                                         placeholder="15"
-                                        onButtonClick={(value) => field.onChange((field.value || '') + value)}
+                                        onButtonClick={(value) => field.onChange(formatNumberWithCommas((parseFormattedNumber(field.value) || 0).toString() + value))}
                                     />
                                 </FormControl>
                                 <FormMessage />
@@ -333,22 +347,23 @@ function AddFeaturedTransactionDialog() {
     );
 }
 
-const historyIconMap: { [key: string]: React.ElementType } = {
-    'created': FilePlus,
-    'updated': Wrench,
-    'deleted': FileMinus,
-    'transaction': CircleDollarSign,
-    'adjusted': History,
-    'added featured': Heart,
-    'removed featured': Heart,
-    'data imported': Download,
+const historyIconMap: { [key: string]: { icon: React.ElementType, color: string } } = {
+    'created': { icon: FilePlus, color: 'text-green-500' },
+    'updated': { icon: Wrench, color: 'text-blue-500' },
+    'deleted': { icon: FileMinus, color: 'text-red-500' },
+    'transaction': { icon: CircleDollarSign, color: 'text-yellow-500' },
+    'adjusted': { icon: History, color: 'text-purple-500' },
+    'added featured': { icon: Heart, color: 'text-pink-500' },
+    'removed featured': { icon: Heart, color: 'text-gray-500' },
+    'data imported': { icon: Download, color: 'text-indigo-500' },
 };
 
 function getHistoryIcon(description: string) {
     const lowerCaseDesc = description.toLowerCase();
     for (const key in historyIconMap) {
         if (lowerCaseDesc.startsWith(key)) {
-            return React.createElement(historyIconMap[key], { className: "h-4 w-4 text-muted-foreground" });
+            const { icon, color } = historyIconMap[key];
+            return React.createElement(icon, { className: `h-4 w-4 ${color}` });
         }
     }
     return <History className="h-4 w-4 text-muted-foreground" />;
@@ -409,10 +424,14 @@ export default function TransactionsView() {
                     state.transactions.map(t => (
                       <TableRow key={t.id}>
                         <TableCell className="font-medium">{t.description}</TableCell>
-                        <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
+                        <TableCell>
+                            <Badge variant="outline" style={{ backgroundColor: getCategoryColor(t.category) }}>
+                                {t.category}
+                            </Badge>
+                        </TableCell>
                         <TableCell>{state.moneySources.find(ms => ms.id === t.moneySourceId)?.name || 'N/A'}</TableCell>
                         <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
-                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
+                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                           {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                         </TableCell>
                         <TableCell>
