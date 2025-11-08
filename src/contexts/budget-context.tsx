@@ -124,7 +124,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
             ? {
                 ...ms,
                 balance: ms.balance + signedAmount,
-                budget: ms.budget + signedAmount,
+                budget: ms.budget + (type === 'income' ? amount : 0),
                 spent: type === 'expense' ? ms.spent + amount : ms.spent,
               }
             : ms
@@ -170,7 +170,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
             ? {
                 ...ms,
                 balance: ms.balance - signedAmount,
-                budget: ms.budget - signedAmount,
+                budget: ms.budget - (type === 'income' ? amount : 0),
                 spent: type === 'expense' ? ms.spent - amount : ms.spent,
               }
             : ms
@@ -273,7 +273,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedState = localStorage.getItem(STORAGE_KEY);
       if (storedState) {
-        const parsedState = JSON.parse(storedState);
+        const parsedState = JSON.parse(storedState) as BudgetState;
         // Basic migration: ensure transactions have a 'type'
         if (parsedState.transactions) {
           parsedState.transactions = parsedState.transactions.map((t: any) => ({
@@ -282,6 +282,16 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
             amount: Math.abs(t.amount) // Ensure amount is always positive
           }));
         }
+        if (parsedState.featuredTransactions) {
+          parsedState.featuredTransactions = parsedState.featuredTransactions.map((ft: any) => ({
+            ...ft,
+            amount: ft.amount || 0, // ensure amount exists
+          }));
+        } else {
+            parsedState.featuredTransactions = [];
+        }
+
+
         dispatch({ type: 'SET_INITIAL_STATE', payload: parsedState });
       }
     } catch (error) {

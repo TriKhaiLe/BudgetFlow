@@ -41,7 +41,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, PlusCircle, Trash, Pen, Edit } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash, Pen } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
@@ -185,7 +185,7 @@ const updateBalanceSchema = z.object({
     }),
 });
 
-function UpdateBalanceDialog({ source }: { source: MoneySource }) {
+function UpdateBalanceDialog({ source, children }: { source: MoneySource, children: React.ReactNode }) {
     const [isOpen, setIsOpen] = React.useState(false);
     const { dispatch } = useBudget();
     const { toast } = useToast();
@@ -217,9 +217,7 @@ function UpdateBalanceDialog({ source }: { source: MoneySource }) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Edit className="mr-2 h-4 w-4" /> Update Balance
-                </DropdownMenuItem>
+                {children}
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
@@ -301,7 +299,7 @@ export default function MoneySources() {
                 <TableHead className="text-right">Budget</TableHead>
                 <TableHead className="text-right">Spent</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
-                <TableHead><span className="sr-only">Actions</span></TableHead>
+                <TableHead className='text-right'><span className="sr-only">Actions</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -313,6 +311,13 @@ export default function MoneySources() {
                     <TableCell className="text-right">{formatCurrency(source.spent)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(source.balance)}</TableCell>
                     <TableCell className="text-right">
+                        <div className='flex items-center justify-end gap-2'>
+                        <UpdateBalanceDialog source={source}>
+                            <Button variant="outline" size="icon">
+                                <Pen className="h-4 w-4" />
+                                <span className='sr-only'>Update Balance</span>
+                            </Button>
+                        </UpdateBalanceDialog>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
@@ -322,15 +327,15 @@ export default function MoneySources() {
                             <DropdownMenuContent>
                                 <AddEditMoneySourceDialog source={source}>
                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <Pen className="mr-2 h-4 w-4" /> Edit Source
+                                        <Pen className="mr-2 h-4 w-4" /> Edit Details
                                     </DropdownMenuItem>
                                 </AddEditMoneySourceDialog>
-                                <UpdateBalanceDialog source={source} />
                                 <DropdownMenuItem onClick={() => handleDelete(source)} className="text-destructive">
                                     <Trash className="mr-2 h-4 w-4" /> Delete
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+                        </div>
                     </TableCell>
                   </TableRow>
                 ))

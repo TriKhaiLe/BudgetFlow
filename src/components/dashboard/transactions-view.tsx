@@ -49,12 +49,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Trash, Loader2, Sparkles } from 'lucide-react';
+import { PlusCircle, Trash, Loader2, Sparkles, Building, Car, Utensils, Gift, Heart, FilePlus, FileMinus, History, Wrench, CircleDollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { suggestTransactionCategories } from '@/ai/flows/suggest-transaction-categories';
 import { Badge } from '../ui/badge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
+import { Combobox } from '../ui/combobox';
 
 function FormattedInput({ field, placeholder, onButtonClick }: { field: any, placeholder?: string, onButtonClick?: (value: string) => void }) {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,6 +86,19 @@ const transactionSchema = z.object({
   type: z.enum(['income', 'expense']),
 });
 
+const categorySuggestions = [
+    { value: 'food', label: 'Food & Groceries' },
+    { value: 'transport', label: 'Transport' },
+    { value: 'housing', label: 'Housing' },
+    { value: 'salary', label: 'Salary' },
+    { value: 'entertainment', label: 'Entertainment' },
+    { value: 'health', label: 'Health' },
+    { value: 'shopping', label: 'Shopping' },
+    { value: 'personal care', label: 'Personal Care' },
+    { value: 'investment', label: 'Investment' },
+    { value: 'other', label: 'Other' },
+]
+
 function AddTransactionDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { state, dispatch } = useBudget();
@@ -95,7 +109,7 @@ function AddTransactionDialog() {
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { description: '', amount: '0', category: '', moneySourceId: '', type: 'expense' },
+    defaultValues: { description: '', amount: '', category: '', moneySourceId: '', type: 'expense' },
   });
 
   const description = form.watch('description');
@@ -134,7 +148,13 @@ function AddTransactionDialog() {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) {
+            form.reset({ description: '', amount: '', category: '', moneySourceId: '', type: 'expense' });
+            setSuggestions([]);
+        }
+        setIsOpen(open);
+    }}>
       <DialogTrigger asChild>
         <Button size="sm" className="h-8 gap-1">
           <PlusCircle className="h-3.5 w-3.5" />
@@ -189,7 +209,7 @@ function AddTransactionDialog() {
                       <FormattedInput
                         field={field}
                         placeholder="55"
-                        onButtonClick={(value) => field.onChange(field.value + value)}
+                        onButtonClick={(value) => field.onChange((field.value || '') + value)}
                       />
                    </FormControl>
                   <FormMessage />
@@ -209,16 +229,21 @@ function AddTransactionDialog() {
               )} />
             </div>
             <FormField control={form.control} name="category" render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Category</FormLabel>
-                  <FormControl><Input placeholder="e.g., Food" {...field} /></FormControl>
+                    <Combobox
+                        options={categorySuggestions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select or type a category..."
+                    />
                   <FormMessage />
                 </FormItem>
               )} />
               {isSuggesting && <div className="flex items-center text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Thinking...</div>}
               {suggestions.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  <div className="text-sm font-medium flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4 text-primary" /> Suggestions:</div>
+                  <div className="text-sm font-medium flex items-center gap-2 text-muted-foreground"><Sparkles className="w-4 h-4 text-primary" /> AI Suggestions:</div>
                   {suggestions.map(s => <Button key={s} size="sm" variant="outline" type="button" onClick={() => form.setValue('category', s)}>{s}</Button>)}
                 </div>
               )}
@@ -235,6 +260,7 @@ function AddTransactionDialog() {
 const featuredTransactionSchema = z.object({
     description: z.string().min(2, "Description is required."),
     category: z.string().min(2, "Category is required."),
+    amount: z.string().refine(val => parseFormattedNumber(val) > 0, 'Amount must be greater than zero.'),
 });
 
 function AddFeaturedTransactionDialog() {
@@ -243,11 +269,11 @@ function AddFeaturedTransactionDialog() {
     const { toast } = useToast();
     const form = useForm<z.infer<typeof featuredTransactionSchema>>({
         resolver: zodResolver(featuredTransactionSchema),
-        defaultValues: { description: '', category: '' },
+        defaultValues: { description: '', category: '', amount: '' },
     });
 
     function onSubmit(values: z.infer<typeof featuredTransactionSchema>) {
-        dispatch({ type: 'ADD_FEATURED_TRANSACTION', payload: values });
+        dispatch({ type: 'ADD_FEATURED_TRANSACTION', payload: { ...values, amount: parseFormattedNumber(values.amount) } });
         toast({ title: "Success", description: "Featured transaction logged." });
         form.reset();
         setIsOpen(false);
@@ -275,13 +301,28 @@ function AddFeaturedTransactionDialog() {
                                 <FormMessage />
                             </FormItem>
                         )} />
-                        <FormField control={form.control} name="category" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Category</FormLabel>
-                                <FormControl><Input placeholder="e.g., Social" {...field} /></FormControl>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField control={form.control} name="category" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category</FormLabel>
+                                    <FormControl><Input placeholder="e.g., Social" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                             <FormField control={form.control} name="amount" render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Amount</FormLabel>
+                                <FormControl>
+                                    <FormattedInput
+                                        field={field}
+                                        placeholder="15"
+                                        onButtonClick={(value) => field.onChange((field.value || '') + value)}
+                                    />
+                                </FormControl>
                                 <FormMessage />
-                            </FormItem>
-                        )} />
+                                </FormItem>
+                            )} />
+                        </div>
                         <DialogFooter>
                             <Button type="submit">Log Spend</Button>
                         </DialogFooter>
@@ -290,6 +331,27 @@ function AddFeaturedTransactionDialog() {
             </DialogContent>
         </Dialog>
     );
+}
+
+const historyIconMap: { [key: string]: React.ElementType } = {
+    'created': FilePlus,
+    'updated': Wrench,
+    'deleted': FileMinus,
+    'transaction': CircleDollarSign,
+    'adjusted': History,
+    'added featured': Heart,
+    'removed featured': Heart,
+    'data imported': Download,
+};
+
+function getHistoryIcon(description: string) {
+    const lowerCaseDesc = description.toLowerCase();
+    for (const key in historyIconMap) {
+        if (lowerCaseDesc.startsWith(key)) {
+            return React.createElement(historyIconMap[key], { className: "h-4 w-4 text-muted-foreground" });
+        }
+    }
+    return <History className="h-4 w-4 text-muted-foreground" />;
 }
 
 export default function TransactionsView() {
@@ -350,7 +412,7 @@ export default function TransactionsView() {
                         <TableCell><Badge variant="outline">{t.category}</Badge></TableCell>
                         <TableCell>{state.moneySources.find(ms => ms.id === t.moneySourceId)?.name || 'N/A'}</TableCell>
                         <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
-                        <TableCell className={`text-right ${t.type === 'income' ? 'text-green-600' : 'text-destructive'}`}>
+                        <TableCell className={`text-right font-medium ${t.type === 'income' ? 'text-primary' : 'text-destructive'}`}>
                           {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                         </TableCell>
                         <TableCell>
@@ -389,6 +451,7 @@ export default function TransactionsView() {
                     <TableHead>Description</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right"><span className="sr-only">Actions</span></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -399,6 +462,7 @@ export default function TransactionsView() {
                         <TableCell className="font-medium">{ft.description}</TableCell>
                         <TableCell><Badge variant="secondary">{ft.category}</Badge></TableCell>
                         <TableCell>{new Date(ft.date).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(ft.amount)}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => handleDeleteFeatured(ft.id)}>
                             <Trash className="h-4 w-4" />
@@ -408,7 +472,7 @@ export default function TransactionsView() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
+                      <TableCell colSpan={5} className="h-24 text-center">
                         No featured spends yet.
                       </TableCell>
                     </TableRow>
@@ -430,6 +494,9 @@ export default function TransactionsView() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className='w-10'>
+                      <span className='sr-only'>Icon</span>
+                    </TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Timestamp</TableHead>
                   </TableRow>
@@ -437,6 +504,7 @@ export default function TransactionsView() {
                 <TableBody>
                   {state.history.slice().reverse().map(log => (
                     <TableRow key={log.id}>
+                      <TableCell>{getHistoryIcon(log.description)}</TableCell>
                       <TableCell>{log.description}</TableCell>
                       <TableCell className="text-right">{new Date(log.timestamp).toLocaleString()}</TableCell>
                     </TableRow>
