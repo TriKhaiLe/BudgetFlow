@@ -51,7 +51,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, Trash, Loader2, Sparkles, Heart, FilePlus, FileMinus, History, Wrench, CircleDollarSign, Download, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { suggestTransactionCategories } from '@/ai/flows/suggest-transaction-categories';
 import { Badge } from '../ui/badge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
@@ -83,7 +82,7 @@ function FormattedInput({ field, placeholder, onButtonClick }: { field: any, pla
 }
 
 const transactionSchema = z.object({
-  description: z.string().min(2, 'Description is required.'),
+  description: z.string().optional(),
   amount: z.string().refine(val => parseFormattedNumber(val) > 0, 'Amount must be greater than zero.'),
   category: z.string().optional(),
   moneySourceId: z.string().min(1, 'Please select a money source.'),
@@ -108,11 +107,20 @@ function AddTransactionDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
+  
+  const defaultMoneySourceId = state.moneySources.length > 0 ? state.moneySources[0].id : '';
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { description: '', amount: '', category: '', moneySourceId: '', type: 'income', date: new Date() },
+    defaultValues: { description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date() },
   });
+  
+  React.useEffect(() => {
+    if (state.moneySources.length > 0) {
+      form.setValue('moneySourceId', state.moneySources[0].id);
+    }
+  }, [state.moneySources, form]);
+
 
   function onSubmit(values: z.infer<typeof transactionSchema>) {
     dispatch({ type: 'ADD_TRANSACTION', payload: {
@@ -122,14 +130,14 @@ function AddTransactionDialog() {
         date: values.date.toISOString(),
     } });
     toast({ title: 'Success', description: 'Transaction added.' });
-    form.reset();
+    form.reset({ description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date() });
     setIsOpen(false);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
         if (!open) {
-            form.reset({ description: '', amount: '', category: '', moneySourceId: '', type: 'income', date: new Date() });
+            form.reset({ description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date() });
         }
         setIsOpen(open);
     }}>
@@ -272,8 +280,8 @@ function AddTransactionDialog() {
 }
 
 const featuredTransactionSchema = z.object({
-    description: z.string().min(2, "Description is required."),
-    category: z.string().min(2, "Category is required."),
+    description: z.string().optional(),
+    category: z.string().min(1, "Category is required."),
     amount: z.string().refine(val => parseFormattedNumber(val) > 0, 'Amount must be greater than zero.'),
 });
 

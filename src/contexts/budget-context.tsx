@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
 import type { BudgetState, MoneySource, Transaction, FeaturedTransaction } from '@/lib/types';
-import { parseFormattedNumber } from '@/lib/utils';
+import { parseFormattedNumber, formatCurrency } from '@/lib/utils';
 
 const STORAGE_KEY = 'budgetFlowState';
 
@@ -137,7 +137,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
           ...state.history,
           {
             id: crypto.randomUUID(),
-            description: `Transaction: ${newTransaction.description} (${signedAmount > 0 ? '+' : ''}${formatCurrency(signedAmount)})`,
+            description: `Transaction: ${newTransaction.description || 'Untitled'} (${signedAmount > 0 ? '+' : ''}${formatCurrency(signedAmount)})`,
             timestamp: new Date().toISOString(),
           },
         ],
@@ -203,7 +203,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
               ...state.history,
               {
                   id: crypto.randomUUID(),
-                  description: `Added featured transaction: ${newFeatured.description}`,
+                  description: `Added featured transaction: ${newFeatured.description || 'Untitled'}`,
                   timestamp: new Date().toISOString(),
               },
           ],
@@ -246,6 +246,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
             return {
                 moneySources: importedState.moneySources.map(ms => ({
                     ...ms,
+                    budget: ms.balance, // Set next month's budget to last month's final balance
                     spent: 0,
                 })),
                 transactions: [],
@@ -253,7 +254,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
                 history: [
                     {
                         id: crypto.randomUUID(),
-                        description: `Data imported for next month. Budgets kept, spending reset.`,
+                        description: `Data imported for next month. Budgets set from previous balances, spending reset.`,
                         timestamp: new Date().toISOString(),
                     },
                 ],
@@ -268,16 +269,6 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 };
 
 const BudgetContext = createContext<{ state: BudgetState; dispatch: Dispatch<Action> } | undefined>(undefined);
-
-// Helper function to format currency for logs
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-};
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(budgetReducer, initialState);

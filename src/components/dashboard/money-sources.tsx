@@ -327,19 +327,19 @@ export default function MoneySources() {
                   <TableRow key={source.id}>
                     <TableCell className="font-medium">{source.name}</TableCell>
                     <TableCell className="text-right">{formatCurrency(source.budget)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(source.spent)}</TableCell>
+                    <TableCell className="text-right text-red-500">{formatCurrency(source.spent)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(source.balance)}</TableCell>
                     <TableCell className="text-right">
                         <div className='flex items-center justify-end gap-2'>
                         <UpdateBalanceDialog source={source}>
-                            <Button variant="outline" size="icon">
+                            <Button variant="outline" size="icon" className="h-8 w-8">
                                 <Pen className="h-4 w-4" />
                                 <span className='sr-only'>Update Balance</span>
                             </Button>
                         </UpdateBalanceDialog>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
                                     <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
