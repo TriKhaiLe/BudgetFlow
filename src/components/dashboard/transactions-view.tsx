@@ -49,7 +49,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Trash, Loader2, Sparkles, Building, Car, Utensils, Gift, Heart, FilePlus, FileMinus, History, Wrench, CircleDollarSign } from 'lucide-react';
+import { PlusCircle, Trash, Loader2, Sparkles, Heart, FilePlus, FileMinus, History, Wrench, CircleDollarSign, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { suggestTransactionCategories } from '@/ai/flows/suggest-transaction-categories';
 import { Badge } from '../ui/badge';
