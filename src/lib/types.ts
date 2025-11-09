@@ -35,4 +35,5 @@ export interface BudgetState {
   transactions: Transaction[];
   featuredTransactions: FeaturedTransaction[];
   history: HistoryLog[];
+  currentMonth: string;
 }

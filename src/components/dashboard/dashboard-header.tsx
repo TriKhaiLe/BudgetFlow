@@ -3,6 +3,7 @@ import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { AIAssistantDialog } from './ai-assistant-dialog';
 import { DataManagement } from './data-management';
+import { BudgetMonthSelector } from './budget-month-selector';
 
 export default function DashboardHeader() {
   return (
@@ -12,11 +13,10 @@ export default function DashboardHeader() {
       </nav>
       {/* Mobile header can be added here if needed */}
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-        <div className="ml-auto flex-1 sm:flex-initial">
-          <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
+            <BudgetMonthSelector />
             <AIAssistantDialog />
             <DataManagement />
-          </div>
         </div>
       </div>
     </header>

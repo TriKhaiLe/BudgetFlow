@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import type { BudgetState } from '@/lib/types';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
+import { format } from 'date-fns';
+
 
 export function DataManagement() {
   const { state, dispatch } = useBudget();
@@ -25,8 +27,12 @@ export function DataManagement() {
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `budgetflow-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+      const budgetDate = state.currentMonth ? new Date(state.currentMonth) : new Date();
+      const monthYear = format(budgetDate, 'MMMM-yyyy');
+      const exportDate = format(new Date(), 'yyyy-MM-dd');
+      a.download = `budgetflow-backup_${monthYear}_(exported_on_${exportDate}).json`;
+
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

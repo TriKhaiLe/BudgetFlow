@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
 import type { BudgetState, MoneySource, Transaction, FeaturedTransaction } from '@/lib/types';
 import { parseFormattedNumber, formatCurrency } from '@/lib/utils';
+import { format, startOfMonth } from 'date-fns';
 
 const STORAGE_KEY = 'budgetFlowState';
 
@@ -17,19 +18,35 @@ type Action =
   | { type: 'ADD_FEATURED_TRANSACTION'; payload: Omit<FeaturedTransaction, 'id'|'date'> }
   | { type: 'DELETE_FEATURED_TRANSACTION'; payload: string }
   | { type: 'IMPORT_DATA'; payload: { state: BudgetState; strategy: 'REPLACE' | 'NEXT_MONTH' } }
-  | { type: 'ADJUST_BALANCE'; payload: { moneySourceId: string; newBalance: number } };
+  | { type: 'ADJUST_BALANCE'; payload: { moneySourceId: string; newBalance: number } }
+  | { type: 'SET_CURRENT_MONTH'; payload: Date };
 
 const initialState: BudgetState = {
   moneySources: [],
   transactions: [],
   featuredTransactions: [],
   history: [],
+  currentMonth: startOfMonth(new Date()).toISOString(),
 };
 
 const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
   switch (action.type) {
     case 'SET_INITIAL_STATE':
       return action.payload;
+
+    case 'SET_CURRENT_MONTH':
+      return {
+        ...state,
+        currentMonth: action.payload.toISOString(),
+         history: [
+          ...state.history,
+          {
+            id: crypto.randomUUID(),
+            description: `Changed budget month to ${format(action.payload, 'MMMM yyyy')}`,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      };
 
     case 'ADD_MONEY_SOURCE': {
       const newSource: MoneySource = {
@@ -164,7 +181,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 
     case 'DELETE_TRANSACTION': {
       const { amount, moneySourceId, type, description } = action.payload;
-      const signedAmount = type === 'income' ? amount : -amount;
+      const signedAmount = type === 'income' ? amount : -signedAmount;
       
       return {
         ...state,
@@ -233,7 +250,7 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
             return {
                 ...importedState,
                 history: [
-                    ...importedState.history,
+                    ...(importedState.history || []),
                     {
                         id: crypto.randomUUID(),
                         description: `Data imported and replaced.`,
@@ -243,14 +260,16 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
             };
         }
         if (strategy === 'NEXT_MONTH') {
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
             return {
+                ...initialState,
+                currentMonth: startOfMonth(nextMonth).toISOString(),
                 moneySources: importedState.moneySources.map(ms => ({
                     ...ms,
-                    budget: ms.balance, // Set next month's budget to last month's final balance
+                    budget: ms.balance,
                     spent: 0,
                 })),
-                transactions: [],
-                featuredTransactions: [],
                 history: [
                     {
                         id: crypto.randomUUID(),
@@ -279,28 +298,31 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       const storedState = localStorage.getItem(STORAGE_KEY);
       if (storedState) {
         const parsedState = JSON.parse(storedState) as BudgetState;
-        // Basic migration: ensure transactions have a 'type'
+        
+        // --- Backward compatibility migrations ---
+        if (!parsedState.currentMonth) {
+            parsedState.currentMonth = startOfMonth(new Date()).toISOString();
+        }
         if (parsedState.transactions) {
           parsedState.transactions = parsedState.transactions.map((t: any) => ({
             ...t,
             type: t.type || (t.amount > 0 ? 'income' : 'expense'),
-            amount: Math.abs(t.amount) // Ensure amount is always positive
+            amount: Math.abs(t.amount)
           }));
         }
-        if (parsedState.featuredTransactions) {
-          parsedState.featuredTransactions = parsedState.featuredTransactions.map((ft: any) => ({
-            ...ft,
-            amount: ft.amount || 0, // ensure amount exists
-          }));
-        } else {
+         if (!parsedState.featuredTransactions) {
             parsedState.featuredTransactions = [];
         }
-
+        if (!parsedState.history) {
+            parsedState.history = [];
+        }
 
         dispatch({ type: 'SET_INITIAL_STATE', payload: parsedState });
       }
     } catch (error) {
       console.error('Failed to load state from localStorage', error);
+      // If parsing fails, start with a clean slate
+      dispatch({ type: 'SET_INITIAL_STATE', payload: initialState });
     }
     setIsInitialized(true);
   }, []);

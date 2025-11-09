@@ -36,7 +36,7 @@ export default function BudgetSummary() {
             <ReceiptText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.totalSpent)}</div>
+            <div className="text-2xl font-bold text-red-500">{formatCurrency(summary.totalSpent)}</div>
              <Progress value={summary.percentageSpent} className="mt-2 h-2" />
             </CardContent>
         </Card>

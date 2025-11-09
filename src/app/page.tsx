@@ -5,6 +5,7 @@ import BudgetSummary from '@/components/dashboard/budget-summary';
 import MoneySources from '@/components/dashboard/money-sources';
 import TransactionsView from '@/components/dashboard/transactions-view';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
+import { Analytics } from '@/components/dashboard/analytics';
 
 export default function Home() {
   return (
@@ -16,6 +17,7 @@ export default function Home() {
             <BudgetSummary />
             <MoneySources />
           </div>
+          <Analytics />
           <TransactionsView />
         </main>
       </div>
