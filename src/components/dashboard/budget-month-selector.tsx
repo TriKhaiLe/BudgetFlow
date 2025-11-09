@@ -23,15 +23,17 @@ import {
 export function BudgetMonthSelector() {
   const { state, dispatch } = useBudget();
   const [isOpen, setIsOpen] = React.useState(false);
-  const budgetDate = new Date(state.currentMonth);
+  const budgetDate = state.currentMonth ? new Date(state.currentMonth) : null;
 
   const handleMonthChange = (monthStr: string) => {
+    if (!budgetDate) return;
     const newDate = new Date(budgetDate);
     newDate.setMonth(parseInt(monthStr, 10));
     dispatch({ type: 'SET_CURRENT_MONTH', payload: newDate });
   };
   
   const handleYearChange = (yearStr: string) => {
+      if (!budgetDate) return;
       const newDate = new Date(budgetDate);
       newDate.setFullYear(parseInt(yearStr, 10));
       dispatch({ type: 'SET_CURRENT_MONTH', payload: newDate });
@@ -56,32 +58,34 @@ export function BudgetMonthSelector() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <div className="p-2 flex justify-around">
-            <Select onValueChange={handleMonthChange} value={budgetDate.getMonth().toString()}>
-                <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent>
-                    {Array.from({length: 12}).map((_, i) => (
-                        <SelectItem key={i} value={i.toString()}>
-                            {format(new Date(0, i), 'MMMM')}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-            <Select onValueChange={handleYearChange} value={budgetDate.getFullYear().toString()}>
-                <SelectTrigger className="w-[100px]">
-                    <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                    {years.map(year => (
-                        <SelectItem key={year} value={year.toString()}>
-                            {year}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        </div>
+        {budgetDate && (
+            <div className="p-2 flex justify-around">
+                <Select onValueChange={handleMonthChange} value={budgetDate.getMonth().toString()}>
+                    <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {Array.from({length: 12}).map((_, i) => (
+                            <SelectItem key={i} value={i.toString()}>
+                                {format(new Date(0, i), 'MMMM')}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <Select onValueChange={handleYearChange} value={budgetDate.getFullYear().toString()}>
+                    <SelectTrigger className="w-[100px]">
+                        <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {years.map(year => (
+                            <SelectItem key={year} value={year.toString()}>
+                                {year}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+        )}
       </PopoverContent>
     </Popover>
   );
