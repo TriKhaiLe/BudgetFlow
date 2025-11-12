@@ -42,9 +42,11 @@ export function Combobox({ options, value, onChange, placeholder = "Select optio
           aria-expanded={open}
           className="w-full justify-between"
         >
+          <span className="truncate">
           {value
             ? options.find((option) => option.value === value)?.label || value
             : placeholder}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

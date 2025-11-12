@@ -59,6 +59,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '../ui/calendar';
+import { Switch } from '../ui/switch';
 
 function FormattedInput({ field, placeholder, onButtonClick }: { field: any, placeholder?: string, onButtonClick?: (value: string) => void }) {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,6 +89,7 @@ const transactionSchema = z.object({
   moneySourceId: z.string().min(1, 'Please select a money source.'),
   type: z.enum(['income', 'expense']),
   date: z.date(),
+  affectBalance: z.boolean(),
 });
 
 const categorySuggestions = [
@@ -112,11 +114,11 @@ function AddTransactionDialog() {
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date() },
+    defaultValues: { description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date(), affectBalance: true },
   });
   
   React.useEffect(() => {
-    if (state.moneySources.length > 0) {
+    if (state.moneySources.length > 0 && !form.getValues('moneySourceId')) {
       form.setValue('moneySourceId', state.moneySources[0].id);
     }
   }, [state.moneySources, form]);
@@ -130,14 +132,14 @@ function AddTransactionDialog() {
         date: values.date.toISOString(),
     } });
     toast({ title: 'Success', description: 'Transaction added.' });
-    form.reset({ description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date() });
+    form.reset({ description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date(), affectBalance: true });
     setIsOpen(false);
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
         if (!open) {
-            form.reset({ description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date() });
+            form.reset({ description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date(), affectBalance: true });
         }
         setIsOpen(open);
     }}>
@@ -204,7 +206,7 @@ function AddTransactionDialog() {
               <FormField control={form.control} name="moneySourceId" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Money Source</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select a source" /></SelectTrigger></FormControl>
                     <SelectContent>
                       {state.moneySources.map(source => <SelectItem key={source.id} value={source.id}>{source.name}</SelectItem>)}
@@ -222,7 +224,7 @@ function AddTransactionDialog() {
                             options={categorySuggestions}
                             value={field.value || ''}
                             onChange={field.onChange}
-                            placeholder="Select or type a category..."
+                            placeholder="Select or type..."
                         />
                       <FormMessage />
                     </FormItem>
@@ -269,6 +271,26 @@ function AddTransactionDialog() {
                     )}
                 />
              </div>
+             <FormField
+                control={form.control}
+                name="affectBalance"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                        <FormLabel>Update Balance</FormLabel>
+                        <FormDescription>
+                            Toggle whether this transaction affects the money source balance.
+                        </FormDescription>
+                    </div>
+                    <FormControl>
+                        <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        />
+                    </FormControl>
+                    </FormItem>
+                )}
+                />
             <DialogFooter>
               <Button type="submit">Add Transaction</Button>
             </DialogFooter>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { AIAssistantDialog } from './ai-assistant-dialog';
 import { DataManagement } from './data-management';
 import { BudgetMonthSelector } from './budget-month-selector';
+import { HelpDialog } from './help-dialog';
 
 export default function DashboardHeader() {
   return (
@@ -17,6 +18,7 @@ export default function DashboardHeader() {
             <BudgetMonthSelector />
             <AIAssistantDialog />
             <DataManagement />
+            <HelpDialog />
         </div>
       </div>
     </header>
