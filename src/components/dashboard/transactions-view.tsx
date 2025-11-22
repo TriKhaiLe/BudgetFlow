@@ -426,16 +426,15 @@ export default function TransactionsView() {
           <TabsTrigger value="featured">Featured</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
-        <div className="ml-auto flex items-center gap-2">
-            <AddFeaturedTransactionDialog />
-            <AddTransactionDialog />
-        </div>
       </div>
       <TabsContent value="transactions">
         <Card>
-          <CardHeader>
-            <CardTitle>Budget Transactions</CardTitle>
-            <CardDescription>Income and expenses that impact your budget.</CardDescription>
+          <CardHeader className="flex-row items-start justify-between">
+            <div>
+              <CardTitle>Budget Transactions</CardTitle>
+              <CardDescription>Income and expenses that impact your budget.</CardDescription>
+            </div>
+            <AddTransactionDialog />
           </CardHeader>
           <CardContent>
             <div className="overflow-auto max-h-[400px]">
@@ -489,9 +488,12 @@ export default function TransactionsView() {
       </TabsContent>
        <TabsContent value="featured">
          <Card>
-           <CardHeader>
-             <CardTitle>Featured Spends</CardTitle>
-             <CardDescription>Meaningful transactions that don't affect your budget balance.</CardDescription>
+           <CardHeader className="flex-row items-start justify-between">
+             <div>
+                <CardTitle>Featured Spends</CardTitle>
+                <CardDescription>Meaningful transactions that don't affect your budget balance.</CardDescription>
+             </div>
+             <AddFeaturedTransactionDialog />
            </CardHeader>
            <CardContent>
             <div className="overflow-auto max-h-[400px]">
