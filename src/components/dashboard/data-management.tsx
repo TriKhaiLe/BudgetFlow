@@ -120,11 +120,11 @@ export function DataManagement() {
       
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={handleImportClick}>
-          <Upload className="h-4 w-4 mr-2" />
+          <Download className="h-4 w-4 mr-2" />
           Import
         </Button>
         <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-2" />
+          <Upload className="h-4 w-4 mr-2" />
           Export
         </Button>
       </div>
