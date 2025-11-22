@@ -19,8 +19,7 @@ export default function BudgetSummary() {
   }, [state.moneySources]);
 
   return (
-    <div className="sm:grid sm:grid-cols-2 sm:gap-4 xl:grid-cols-1 2xl:grid-cols-3">
-      <div className="sm:contents">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
@@ -51,7 +50,6 @@ export default function BudgetSummary() {
             <p className="text-xs text-muted-foreground">{summary.percentageSpent.toFixed(0)}% of budget spent</p>
             </CardContent>
         </Card>
-      </div>
     </div>
   );
 }
