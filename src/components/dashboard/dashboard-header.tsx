@@ -5,6 +5,8 @@ import { AIAssistantDialog } from './ai-assistant-dialog';
 import { DataManagement } from './data-management';
 import { BudgetMonthSelector } from './budget-month-selector';
 import { HelpDialog } from './help-dialog';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Menu, Wallet } from 'lucide-react';
 
 export default function DashboardHeader() {
   return (
@@ -12,10 +14,35 @@ export default function DashboardHeader() {
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Logo />
       </nav>
-      {/* Mobile header can be added here if needed */}
-      <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-        <div className="ml-auto flex items-center gap-2">
-            <BudgetMonthSelector />
+      
+      {/* Mobile Menu */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle navigation menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left">
+          <nav className="grid gap-6 text-lg font-medium">
+            <div
+              className='flex items-center gap-2 text-lg font-semibold text-primary'
+            >
+              <Wallet className="h-6 w-6" />
+              <span className="font-bold">BudgetFlow</span>
+            </div>
+            <div className='flex flex-col gap-4'>
+                <AIAssistantDialog />
+                <DataManagement />
+                <HelpDialog />
+            </div>
+          </nav>
+        </SheetContent>
+      </Sheet>
+      
+      <div className="flex w-full items-center justify-end gap-4">
+        <BudgetMonthSelector />
+        <div className="hidden md:flex items-center gap-2">
             <AIAssistantDialog />
             <DataManagement />
             <HelpDialog />
