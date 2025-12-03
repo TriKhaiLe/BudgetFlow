@@ -414,174 +414,171 @@ export default function TransactionsView() {
   }
 
   return (
-    <>
+    <Tabs defaultValue="transactions" className="w-full">
       <div className="flex items-center">
         <TabsList>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="featured">Featured</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
+        <div className="ml-auto flex items-center gap-2">
+          {/* This space is intentionally left for buttons that will be moved into tabs */}
+        </div>
       </div>
-      <Tabs defaultValue="transactions">
-        <TabsContent value="transactions">
-          <div className="flex-row items-start justify-between">
-            <div className="ml-auto -mt-12 mb-4 flex justify-end">
-              <AddTransactionDialog />
-            </div>
-          </div>
-          <div className="overflow-auto max-h-[400px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {state.transactions.length > 0 ? (
-                  state.transactions.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell className="font-medium">
-                        {t.description}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          style={{ backgroundColor: getCategoryColor(t.category) }}
-                        >
-                          {t.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {state.moneySources.find((ms) => ms.id === t.moneySourceId)
-                          ?.name || 'N/A'}
-                      </TableCell>
-                      <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
-                      <TableCell
-                        className={`text-right font-medium ${
-                          t.type === 'income' ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {t.type === 'income' ? '+' : '-'}
-                        {formatCurrency(t.amount)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteTransaction(t)}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No transactions yet.
+      <TabsContent value="transactions">
+        <div className="flex items-center justify-end -mt-12 mb-4">
+          <AddTransactionDialog />
+        </div>
+        <div className="overflow-auto max-h-[400px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Description</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {state.transactions.length > 0 ? (
+                state.transactions.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-medium">
+                      {t.description}
                     </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-        <TabsContent value="featured">
-          <div className="flex-row items-start justify-between">
-             <div className="ml-auto -mt-12 mb-4 flex justify-end">
-                <AddFeaturedTransactionDialog />
-             </div>
-          </div>
-          <div className="overflow-auto max-h-[400px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {state.featuredTransactions.length > 0 ? (
-                  state.featuredTransactions.map((ft) => (
-                    <TableRow key={ft.id}>
-                      <TableCell className="font-medium">
-                        {ft.description}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{ft.category}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(ft.date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(ft.amount)}
-                      </TableCell>
-                      <TableCell className="text-right">
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        style={{ backgroundColor: getCategoryColor(t.category) }}
+                      >
+                        {t.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {state.moneySources.find((ms) => ms.id === t.moneySourceId)
+                        ?.name || 'N/A'}
+                    </TableCell>
+                    <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
+                    <TableCell
+                      className={`text-right font-medium ${
+                        t.type === 'income' ? 'text-green-600' : 'text-red-600'
+                      }`}
+                    >
+                      {t.type === 'income' ? '+' : '-'}
+                      {formatCurrency(t.amount)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteFeatured(ft.id)}
+                          onClick={() => handleDeleteTransaction(t)}
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      No featured spends yet.
+                      </div>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-        <TabsContent value="history">
-          <div className="overflow-auto max-h-[400px]">
-            <Table>
-              <TableHeader>
+                ))
+              ) : (
                 <TableRow>
-                  <TableHead className="w-10">
-                    <span className="sr-only">Icon</span>
-                  </TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Timestamp</TableHead>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    No transactions yet.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {state.history
-                  .slice()
-                  .reverse()
-                  .map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>{getHistoryIcon(log.description)}</TableCell>
-                      <TableCell>{log.description}</TableCell>
-                      <TableCell className="text-right">
-                        {new Date(log.timestamp).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </TabsContent>
+      <TabsContent value="featured">
+        <div className="flex items-center justify-end -mt-12 mb-4">
+          <AddFeaturedTransactionDialog />
+        </div>
+        <div className="overflow-auto max-h-[400px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Description</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {state.featuredTransactions.length > 0 ? (
+                state.featuredTransactions.map((ft) => (
+                  <TableRow key={ft.id}>
+                    <TableCell className="font-medium">
+                      {ft.description}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{ft.category}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(ft.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(ft.amount)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteFeatured(ft.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    No featured spends yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </TabsContent>
+      <TabsContent value="history">
+        <div className="overflow-auto max-h-[400px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
+                  <span className="sr-only">Icon</span>
+                </TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Timestamp</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {state.history
+                .slice()
+                .reverse()
+                .map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell>{getHistoryIcon(log.description)}</TableCell>
+                    <TableCell>{log.description}</TableCell>
+                    <TableCell className="text-right">
+                      {new Date(log.timestamp).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }
