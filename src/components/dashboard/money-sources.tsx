@@ -9,13 +9,6 @@ import type { MoneySource } from '@/lib/types';
 import { formatCurrency, formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
   Table,
   TableBody,
   TableCell,
@@ -45,6 +38,7 @@ import { MoreHorizontal, PlusCircle, Trash, Pen } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
+import { CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
 
 const moneySourceSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -294,81 +288,86 @@ export default function MoneySources() {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center">
-        <div className="grid gap-2">
-            <CardTitle>Money Sources</CardTitle>
-            <CardDescription>Manage your financial accounts and wallets.</CardDescription>
-        </div>
-        <div className="ml-auto">
-            <AddEditMoneySourceDialog>
-                <Button size="sm" className="gap-1">
-                <PlusCircle className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Source</span>
-                </Button>
-            </AddEditMoneySourceDialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-auto max-h-[250px]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="text-right">Budget</TableHead>
-                <TableHead className="text-right">Spent</TableHead>
-                <TableHead className="text-right">Balance</TableHead>
-                <TableHead className='text-right'><span className="sr-only">Actions</span></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {state.moneySources.length > 0 ? (
-                state.moneySources.map(source => (
-                  <TableRow key={source.id}>
-                    <TableCell className="font-medium">{source.name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(source.budget)}</TableCell>
-                    <TableCell className="text-right text-red-500">{formatCurrency(source.spent)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(source.balance)}</TableCell>
-                    <TableCell className="text-right">
-                        <div className='flex items-center justify-end gap-2'>
-                        <UpdateBalanceDialog source={source}>
-                            <Button variant="outline" size="icon" className="h-8 w-8">
-                                <Pen className="h-4 w-4" />
-                                <span className='sr-only'>Update Balance</span>
-                            </Button>
-                        </UpdateBalanceDialog>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <AddEditMoneySourceDialog source={source}>
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                        <Pen className="mr-2 h-4 w-4" /> Edit Details
-                                    </DropdownMenuItem>
-                                </AddEditMoneySourceDialog>
-                                <DropdownMenuItem onClick={() => handleDelete(source)} className="text-destructive">
-                                    <Trash className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    No money sources yet.
+    <>
+      <div className="ml-auto -mt-16 mb-4">
+        <AddEditMoneySourceDialog>
+          <Button size="sm" className="gap-1">
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+              Add Source
+            </span>
+          </Button>
+        </AddEditMoneySourceDialog>
+      </div>
+      <div className="overflow-auto max-h-[250px]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead className="text-right">Budget</TableHead>
+              <TableHead className="text-right">Spent</TableHead>
+              <TableHead className="text-right">Balance</TableHead>
+              <TableHead className="text-right">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {state.moneySources.length > 0 ? (
+              state.moneySources.map((source) => (
+                <TableRow key={source.id}>
+                  <TableCell className="font-medium">{source.name}</TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(source.budget)}
+                  </TableCell>
+                  <TableCell className="text-right text-red-500">
+                    {formatCurrency(source.spent)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(source.balance)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <UpdateBalanceDialog source={source}>
+                        <Button variant="outline" size="icon" className="h-8 w-8">
+                          <Pen className="h-4 w-4" />
+                          <span className="sr-only">Update Balance</span>
+                        </Button>
+                      </UpdateBalanceDialog>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <AddEditMoneySourceDialog source={source}>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Pen className="mr-2 h-4 w-4" /> Edit Details
+                            </DropdownMenuItem>
+                          </AddEditMoneySourceDialog>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(source)}
+                            className="text-destructive"
+                          >
+                            <Trash className="mr-2 h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  No money sources yet.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
