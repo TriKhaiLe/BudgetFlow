@@ -18,14 +18,12 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 
 type CollapsibleCardProps = {
   title: string;
-  description: string;
   storageKey: string;
   children: React.ReactNode;
 };
 
 export function CollapsibleCard({
   title,
-  description,
   storageKey,
   children,
 }: CollapsibleCardProps) {
@@ -38,7 +36,6 @@ export function CollapsibleCard({
           <div className="flex w-full cursor-pointer items-center justify-between p-6">
             <div className="grid gap-2">
               <CardTitle>{title}</CardTitle>
-              <CardDescription>{description}</CardDescription>
             </div>
             <ChevronDown
               className={`h-5 w-5 text-muted-foreground transition-transform ${

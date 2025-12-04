@@ -17,7 +17,6 @@ export default function Home() {
           <CollapsibleCard
             storageKey="budget-summary-collapsed"
             title="Budget Summary"
-            description="A quick overview of your budget, spending, and remaining funds for the month."
           >
             <BudgetSummary />
           </CollapsibleCard>
@@ -27,7 +26,6 @@ export default function Home() {
           <CollapsibleCard
             storageKey="transactions-view-collapsed"
             title="Transactions"
-            description="Manage your income, expenses, and historical log."
           >
             <TransactionsView />
           </CollapsibleCard>
@@ -35,7 +33,6 @@ export default function Home() {
           <CollapsibleCard
             storageKey="money-sources-collapsed"
             title="Money Sources"
-            description="Manage your financial accounts and wallets."
           >
             <MoneySources />
           </CollapsibleCard>
