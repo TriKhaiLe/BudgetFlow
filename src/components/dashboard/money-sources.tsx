@@ -289,7 +289,7 @@ export default function MoneySources() {
 
   return (
     <>
-      <div className="ml-auto -mt-16 mb-4">
+      <div className="flex justify-end mb-4">
         <AddEditMoneySourceDialog>
           <Button size="sm" className="gap-1">
             <PlusCircle className="h-3.5 w-3.5" />

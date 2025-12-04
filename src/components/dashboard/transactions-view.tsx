@@ -415,18 +415,13 @@ export default function TransactionsView() {
 
   return (
     <Tabs defaultValue="transactions" className="w-full">
-      <div className="flex items-center">
         <TabsList>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="featured">Featured</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
-        <div className="ml-auto flex items-center gap-2">
-          {/* This space is intentionally left for buttons that will be moved into tabs */}
-        </div>
-      </div>
       <TabsContent value="transactions">
-        <div className="flex items-center justify-end -mt-12 mb-4">
+        <div className="flex items-center justify-end mb-4">
           <AddTransactionDialog />
         </div>
         <div className="overflow-auto max-h-[400px]">
@@ -496,7 +491,7 @@ export default function TransactionsView() {
         </div>
       </TabsContent>
       <TabsContent value="featured">
-        <div className="flex items-center justify-end -mt-12 mb-4">
+        <div className="flex items-center justify-end mb-4">
           <AddFeaturedTransactionDialog />
         </div>
         <div className="overflow-auto max-h-[400px]">
