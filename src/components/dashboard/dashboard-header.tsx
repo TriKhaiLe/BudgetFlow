@@ -24,6 +24,10 @@ export default function DashboardHeader() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left">
+          <div className="sr-only">
+            <h2>Navigation Menu</h2>
+            <p>Access AI Assistant, Data Management, and Help options</p>
+          </div>
           <nav className="grid gap-6 text-lg font-medium">
             <div
               className='flex items-center gap-2 text-lg font-semibold text-primary'

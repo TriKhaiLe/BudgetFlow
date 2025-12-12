@@ -35,8 +35,9 @@ Use this when booting up the repo to regain context fast.
 
 ## UI Landmarks
 
-- `src/app/page.tsx`: wraps dashboard in `BudgetProvider`; sections: Budget Summary, Analytics, Transactions, Money Sources.
-- Header: `dashboard-header.tsx` exposes AI Assistant, Import/Export, Help, Month selector.
+- `src/app/page.tsx`: wraps dashboard in `BudgetProvider`; sections: Budget Summary, Analytics, Transactions, Money Sources. Add buttons for Transactions and Money Sources are in the CollapsibleCard headers.
+- Header: `dashboard-header.tsx` exposes AI Assistant, Import/Export, Help, Month selector. Mobile sidebar includes DialogTitle for accessibility.
+- CollapsibleCard: `collapsible-card.tsx` supports optional `action` prop for header buttons (e.g., Add buttons). Clicking action buttons won't trigger collapse/expand.
 - Analytics: bar chart of expenses by category; hidden when no expenses.
 - Budget Month Selector: month/year dropdown that dispatches `SET_CURRENT_MONTH` (also logs to history).
 - Data Management: JSON import/export; shows strategy dialog before import.

@@ -276,6 +276,19 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
     )
 }
 
+export function AddMoneySourceButton() {
+  return (
+    <AddEditMoneySourceDialog>
+      <Button size="sm" className="gap-1">
+        <PlusCircle className="h-3.5 w-3.5" />
+        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+          Add Source
+        </span>
+      </Button>
+    </AddEditMoneySourceDialog>
+  );
+}
+
 export default function MoneySources() {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
@@ -289,16 +302,6 @@ export default function MoneySources() {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <AddEditMoneySourceDialog>
-          <Button size="sm" className="gap-1">
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Add Source
-            </span>
-          </Button>
-        </AddEditMoneySourceDialog>
-      </div>
       <div className="overflow-auto max-h-[250px]">
         <Table>
           <TableHeader>

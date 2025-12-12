@@ -122,10 +122,13 @@ function AddTransactionDialog() {
 
   function onSubmit(values: z.infer<typeof transactionSchema>) {
     dispatch({ type: 'ADD_TRANSACTION', payload: {
-        ...values,
+        description: values.description || '',
         amount: parseFormattedNumber(values.amount),
         category: values.category || 'Withdraw BIDV',
         date: values.date.toISOString(),
+        type: values.type,
+        moneySourceId: values.moneySourceId,
+        affectBalance: values.affectBalance,
     } });
     toast({ title: 'Success', description: 'Transaction added.' });
     form.reset({ description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date(), affectBalance: true });
@@ -313,7 +316,14 @@ function AddFeaturedTransactionDialog() {
     });
 
     function onSubmit(values: z.infer<typeof featuredTransactionSchema>) {
-        dispatch({ type: 'ADD_FEATURED_TRANSACTION', payload: { ...values, amount: parseFormattedNumber(values.amount) } });
+        dispatch({ 
+            type: 'ADD_FEATURED_TRANSACTION', 
+            payload: { 
+                description: values.description || '', 
+                category: values.category, 
+                amount: parseFormattedNumber(values.amount) 
+            } 
+        });
         toast({ title: "Success", description: "Featured transaction logged." });
         form.reset();
         setIsOpen(false);
@@ -395,6 +405,10 @@ function getHistoryIcon(description: string) {
     return <History className="h-4 w-4 text-muted-foreground" />;
 }
 
+export function AddTransactionButton() {
+  return <AddTransactionDialog />;
+}
+
 export default function TransactionsView() {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
@@ -421,9 +435,6 @@ export default function TransactionsView() {
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
       <TabsContent value="transactions">
-        <div className="flex items-center justify-end mb-4">
-          <AddTransactionDialog />
-        </div>
         <div className="overflow-auto max-h-[400px]">
           <Table>
             <TableHeader>
@@ -491,9 +502,6 @@ export default function TransactionsView() {
         </div>
       </TabsContent>
       <TabsContent value="featured">
-        <div className="flex items-center justify-end mb-4">
-          <AddFeaturedTransactionDialog />
-        </div>
         <div className="overflow-auto max-h-[400px]">
           <Table>
             <TableHeader>

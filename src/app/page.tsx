@@ -2,8 +2,8 @@
 
 import { BudgetProvider } from '@/contexts/budget-context';
 import BudgetSummary from '@/components/dashboard/budget-summary';
-import MoneySources from '@/components/dashboard/money-sources';
-import TransactionsView from '@/components/dashboard/transactions-view';
+import MoneySources, { AddMoneySourceButton } from '@/components/dashboard/money-sources';
+import TransactionsView, { AddTransactionButton } from '@/components/dashboard/transactions-view';
 import DashboardHeader from '@/components/dashboard/dashboard-header';
 import { Analytics } from '@/components/dashboard/analytics';
 import { CollapsibleCard } from '@/components/dashboard/collapsible-card';
@@ -26,6 +26,7 @@ export default function Home() {
           <CollapsibleCard
             storageKey="transactions-view-collapsed"
             title="Transactions"
+            action={<AddTransactionButton />}
           >
             <TransactionsView />
           </CollapsibleCard>
@@ -33,6 +34,7 @@ export default function Home() {
           <CollapsibleCard
             storageKey="money-sources-collapsed"
             title="Money Sources"
+            action={<AddMoneySourceButton />}
           >
             <MoneySources />
           </CollapsibleCard>
