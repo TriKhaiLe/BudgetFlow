@@ -123,7 +123,7 @@ function MoneySourceForm({
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="budget"
@@ -178,7 +178,7 @@ function AddEditMoneySourceDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-[425px] p-4">
         <DialogHeader>
           <DialogTitle>{source ? 'Edit' : 'Add'} Money Source</DialogTitle>
           <DialogDescription>
@@ -229,7 +229,7 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-4">
                 <DialogHeader>
                     <DialogTitle>Update Balance for {source.name}</DialogTitle>
                     <DialogDescription>

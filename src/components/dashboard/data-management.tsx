@@ -90,7 +90,7 @@ export function DataManagement() {
     <>
       <input type="file" ref={fileInputRef} accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-4">
             <DialogHeader>
                 <DialogTitle>Choose Import Strategy</DialogTitle>
                 <DialogDescription>How would you like to import this budget data?</DialogDescription>

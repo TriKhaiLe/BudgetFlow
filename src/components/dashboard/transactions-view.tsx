@@ -145,7 +145,7 @@ function AddTransactionDialog() {
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Transaction</span>
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-xl p-4">
         <DialogHeader>
           <DialogTitle>Add Transaction</DialogTitle>
           <DialogDescription>Log an income or expense that affects your budget.</DialogDescription>
@@ -185,7 +185,7 @@ function AddTransactionDialog() {
                 <FormMessage />
               </FormItem>
             )} />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField control={form.control} name="amount" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
@@ -212,7 +212,7 @@ function AddTransactionDialog() {
                 </FormItem>
               )} />
             </div>
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField control={form.control} name="category" render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Category</FormLabel>
@@ -327,7 +327,7 @@ function AddFeaturedTransactionDialog() {
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Log Featured Spend</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-full max-w-[90vw] sm:max-w-md p-4">
                 <DialogHeader>
                     <DialogTitle>Log Featured Spend</DialogTitle>
                     <DialogDescription>Log a meaningful spend that doesn't affect your budget.</DialogDescription>
@@ -341,7 +341,7 @@ function AddFeaturedTransactionDialog() {
                                 <FormMessage />
                             </FormItem>
                         )} />
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField control={form.control} name="category" render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Category</FormLabel>

@@ -22,7 +22,7 @@ export function HelpDialog() {
           <span className="sr-only">Help</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-2xl p-4">
         <DialogHeader>
           <DialogTitle>BudgetFlow Guide</DialogTitle>
           <DialogDescription>

@@ -99,8 +99,10 @@ export function AIAssistantDialog() {
         description: form.getValues('description'),
         amount: suggestion.amount,
         category: suggestion.category,
+        date: new Date().toISOString(),
         moneySourceId: values.moneySourceId,
         type: suggestion.type,
+        affectBalance: true,
       },
     });
 
@@ -124,7 +126,7 @@ export function AIAssistantDialog() {
           <span className="sr-only sm:not-sr-only">AI Assistant</span>
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-4">
         <DialogHeader>
           <DialogTitle>AI Assistant</DialogTitle>
           <DialogDescription>
