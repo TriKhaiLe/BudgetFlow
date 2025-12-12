@@ -1,4 +1,24 @@
 import type {NextConfig} from 'next';
+import createNextIntlPlugin from '@ducanh2912/next-pwa';
+
+const withPWA = createNextIntlPlugin({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+  runtimeCaching: [
+    {
+      urlPattern: /^https?.*/, 
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'offlineCache',
+        expiration: {
+          maxEntries: 200,
+        },
+      },
+    },
+  ],
+});
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -32,4 +52,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
