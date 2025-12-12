@@ -109,7 +109,7 @@ function MoneySourceForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
         <FormField
           control={form.control}
           name="name"
@@ -159,9 +159,9 @@ function MoneySourceForm({
             )}
           />
         </div>
-        <DialogFooter>
-          <Button type="submit">{source ? 'Save Changes' : 'Add Source'}</Button>
-        </DialogFooter>
+        <div className="pt-4">
+          <Button type="submit" className="w-full">{source ? 'Save Changes' : 'Add Source'}</Button>
+        </div>
       </form>
     </Form>
   );
@@ -178,14 +178,16 @@ function AddEditMoneySourceDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-full max-w-[90vw] sm:max-w-[425px] p-4">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-[425px] p-0 flex flex-col max-h-[90vh]">
+        <DialogHeader className="px-4 pt-4">
           <DialogTitle>{source ? 'Edit' : 'Add'} Money Source</DialogTitle>
           <DialogDescription>
             {source ? 'Update' : 'Create'} a source of funds like a bank account or wallet.
           </DialogDescription>
         </DialogHeader>
-        <MoneySourceForm source={source} onFinished={() => setIsOpen(false)} />
+        <div className="overflow-y-auto px-4 max-h-[calc(90vh-180px)]">
+          <MoneySourceForm source={source} onFinished={() => setIsOpen(false)} />
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -229,13 +231,14 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-4">
-                <DialogHeader>
+            <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-0 flex flex-col max-h-[90vh]">
+                <DialogHeader className="px-4 pt-4">
                     <DialogTitle>Update Balance for {source.name}</DialogTitle>
                     <DialogDescription>
                         Directly set the new balance for this money source. This will be logged in your history.
                     </DialogDescription>
                 </DialogHeader>
+                <div className="overflow-y-auto px-4 max-h-[calc(90vh-180px)]">
                  <div className="grid grid-cols-2 gap-4 py-4 text-center">
                     <div>
                         <p className="text-sm text-muted-foreground">Before</p>
@@ -253,7 +256,7 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
                     </Badge>
                 </div>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form id="update-balance-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField control={form.control} name="newBalance" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>New Balance</FormLabel>
@@ -266,11 +269,12 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
                                 <FormMessage />
                             </FormItem>
                         )} />
-                        <DialogFooter>
-                            <Button type="submit">Confirm Update</Button>
-                        </DialogFooter>
                     </form>
                 </Form>
+                </div>
+                <DialogFooter className="px-4 pb-4 pt-4">
+                    <Button type="submit" form="update-balance-form">Confirm Update</Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     )

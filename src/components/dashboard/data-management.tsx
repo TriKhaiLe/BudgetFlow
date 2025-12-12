@@ -90,11 +90,12 @@ export function DataManagement() {
     <>
       <input type="file" ref={fileInputRef} accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-4">
-            <DialogHeader>
+        <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-0 flex flex-col max-h-[90vh]">
+            <DialogHeader className="px-4 pt-4">
                 <DialogTitle>Choose Import Strategy</DialogTitle>
                 <DialogDescription>How would you like to import this budget data?</DialogDescription>
             </DialogHeader>
+            <div className="overflow-y-auto px-4 py-4 max-h-[calc(90vh-180px)]">
             <RadioGroup defaultValue="REPLACE" onValueChange={(value: 'REPLACE' | 'NEXT_MONTH') => setImportStrategy(value)}>
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="REPLACE" id="r1" />
@@ -111,7 +112,8 @@ export function DataManagement() {
                     </Label>
                 </div>
             </RadioGroup>
-            <DialogFooter>
+            </div>
+            <DialogFooter className="px-4 pb-4 pt-4">
                 <Button variant="ghost" onClick={() => setIsImportDialogOpen(false)}>Cancel</Button>
                 <Button onClick={confirmImport}>Confirm Import</Button>
             </DialogFooter>

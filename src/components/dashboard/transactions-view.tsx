@@ -148,13 +148,14 @@ function AddTransactionDialog() {
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Transaction</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-[90vw] sm:max-w-xl p-4">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-xl p-0 flex flex-col max-h-[90vh]">
+        <DialogHeader className="px-4 pt-4">
           <DialogTitle>Add Transaction</DialogTitle>
           <DialogDescription>Log an income or expense that affects your budget.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+            <div className="overflow-y-auto px-4 space-y-4 max-h-[calc(90vh-180px)]">
             <FormField
               control={form.control}
               name="type"
@@ -290,7 +291,8 @@ function AddTransactionDialog() {
                     </FormItem>
                 )}
                 />
-            <DialogFooter>
+            </div>
+            <DialogFooter className="px-4 pb-4 pt-4">
               <Button type="submit">Add Transaction</Button>
             </DialogFooter>
           </form>
@@ -337,13 +339,14 @@ function AddFeaturedTransactionDialog() {
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Log Featured Spend</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="w-full max-w-[90vw] sm:max-w-md p-4">
-                <DialogHeader>
+            <DialogContent className="w-full max-w-[90vw] sm:max-w-md p-0 flex flex-col max-h-[90vh]">
+                <DialogHeader className="px-4 pt-4">
                     <DialogTitle>Log Featured Spend</DialogTitle>
                     <DialogDescription>Log a meaningful spend that doesn't affect your budget.</DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+                        <div className="overflow-y-auto px-4 space-y-4 py-4 max-h-[calc(90vh-180px)]">
                         <FormField control={form.control} name="description" render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Description</FormLabel>
@@ -373,7 +376,8 @@ function AddFeaturedTransactionDialog() {
                                 </FormItem>
                             )} />
                         </div>
-                        <DialogFooter>
+                        </div>
+                        <DialogFooter className="px-4 pb-4 pt-4">
                             <Button type="submit">Log Spend</Button>
                         </DialogFooter>
                     </form>

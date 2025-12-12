@@ -126,17 +126,17 @@ export function AIAssistantDialog() {
           <span className="sr-only sm:not-sr-only">AI Assistant</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-4">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-0 flex flex-col max-h-[90vh]">
+        <DialogHeader className="px-4 pt-4">
           <DialogTitle>AI Assistant</DialogTitle>
           <DialogDescription>
             Describe a transaction in plain English. For example: "I just bought groceries for $78.34" or "Paycheck of $1500 came in".
           </DialogDescription>
         </DialogHeader>
-
+        <div className="overflow-y-auto px-4 max-h-[calc(90vh-180px)]">
         {!suggestion && (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
               <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Transaction Description</FormLabel>
@@ -147,19 +147,19 @@ export function AIAssistantDialog() {
                   </FormItem>
                 )}
               />
-              <DialogFooter>
-                <Button type="submit" disabled={isLoading}>
+              <div className="pt-4">
+                <Button type="submit" disabled={isLoading} className="w-full">
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Ask AI
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
           </Form>
         )}
 
         {suggestion && (
           <Form {...confirmForm}>
-            <form onSubmit={confirmForm.handleSubmit(onConfirm)} className="space-y-4">
+            <form onSubmit={confirmForm.handleSubmit(onConfirm)} className="space-y-4 py-4">
                 <div className="rounded-lg border bg-card text-card-foreground p-4 space-y-2">
                     <h4 className="font-semibold">AI Suggestion</h4>
                     <div className="flex justify-between items-center">
@@ -191,14 +191,14 @@ export function AIAssistantDialog() {
                         <FormMessage />
                     </FormItem>
                 )} />
-
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setSuggestion(null)}>Back</Button>
-                <Button type="submit">Confirm & Add</Button>
-              </DialogFooter>
+              <div className="flex gap-2 pt-4">
+                <Button variant="ghost" onClick={() => setSuggestion(null)} className="flex-1">Back</Button>
+                <Button type="submit" className="flex-1">Confirm & Add</Button>
+              </div>
             </form>
           </Form>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
