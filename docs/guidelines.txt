@@ -1,0 +1,2 @@
+- Refer to context files in "/docs"
+- Update the context files in "/docs" if something changes in refactoring progress
