@@ -25,6 +25,13 @@ Use this when booting up the repo to regain context fast.
 - Actions include `ADD/UPDATE/DELETE_MONEY_SOURCE`, `ADD/UPDATE/DELETE_TRANSACTION`, `ADD/DELETE_FEATURED_TRANSACTION`, `ADJUST_BALANCE`, `SET_CURRENT_MONTH`, `IMPORT_DATA` strategies, `SET_INITIAL_STATE`.
 - Transactions: income increases budget and balance; expense increases spent and decreases balance; delete assumes transaction affected balance; update is shallow (does not rebalance) and logs a warning.
 - Migrations: on load, backfills `currentMonth`, coerces transaction types, ensures arrays exist.
+- **Reducer Architecture (Refactored Dec 2025)**: Action handlers split into `src/contexts/reducers/` with separate files for money sources, transactions, state, and history helpers.
+
+## Shared Code (Refactored Dec 2025)
+
+- **Constants** (`src/lib/constants.ts`): `CATEGORY_SUGGESTIONS`, `HISTORY_ICON_MAP`, `STORAGE_KEY`, `getHistoryIconConfig()`.
+- **Schemas** (`src/lib/schemas.ts`): Zod validation schemas: `moneySourceSchema`, `transactionSchema`, `featuredTransactionSchema`, `updateBalanceSchema`, `aiAssistantSchema`.
+- **Shared Components** (`src/components/shared/`): `FormattedInput` - reusable number input with comma formatting and quick-add buttons.
 
 ## AI Flows (src/ai)
 

@@ -3,14 +3,21 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useBudget } from '@/contexts/budget-context';
 import type { Transaction, FeaturedTransaction } from '@/lib/types';
-import { formatCurrency, formatNumberWithCommas, parseFormattedNumber, getCategoryColor } from '@/lib/utils';
+import { formatCurrency, parseFormattedNumber, getCategoryColor } from '@/lib/utils';
+import { 
+  CATEGORY_SUGGESTIONS, 
+  getHistoryIconConfig 
+} from '@/lib/constants';
+import { 
+  transactionSchema, 
+  featuredTransactionSchema,
+  type TransactionFormValues,
+  type FeaturedTransactionFormValues 
+} from '@/lib/schemas';
+import { FormattedInput } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import {
-  CardContent,
-} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -46,7 +53,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle, Trash, Heart, FilePlus, FileMinus, History, Wrench, CircleDollarSign, Download, CalendarIcon } from 'lucide-react';
+import { PlusCircle, Trash, History, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -57,50 +64,6 @@ import { format } from 'date-fns';
 import { Calendar } from '../ui/calendar';
 import { Switch } from '../ui/switch';
 
-function FormattedInput({ field, placeholder, onButtonClick }: { field: any, placeholder?: string, onButtonClick?: (value: string) => void }) {
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const rawValue = e.target.value.replace(/,/g, '');
-      if (/^\d*\.?\d*$/.test(rawValue)) { // allow digits and one decimal point
-        field.onChange(formatNumberWithCommas(rawValue));
-      }
-    };
-  
-    return (
-      <div className="relative">
-        <Input placeholder={placeholder} {...field} onChange={handleInputChange} />
-        {onButtonClick && (
-            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
-                <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('00')}>00</Button>
-                <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('000')}>000</Button>
-            </div>
-        )}
-      </div>
-    );
-}
-
-const transactionSchema = z.object({
-  description: z.string().optional(),
-  amount: z.string().refine(val => parseFormattedNumber(val) > 0, 'Amount must be greater than zero.'),
-  category: z.string().optional(),
-  moneySourceId: z.string().min(1, 'Please select a money source.'),
-  type: z.enum(['income', 'expense']),
-  date: z.date(),
-  affectBalance: z.boolean(),
-});
-
-const categorySuggestions = [
-    { value: 'food', label: 'Food & Groceries' },
-    { value: 'transport', label: 'Transport' },
-    { value: 'housing', label: 'Housing' },
-    { value: 'salary', label: 'Salary' },
-    { value: 'entertainment', label: 'Entertainment' },
-    { value: 'health', label: 'Health' },
-    { value: 'shopping', label: 'Shopping' },
-    { value: 'personal care', label: 'Personal Care' },
-    { value: 'investment', label: 'Investment' },
-    { value: 'other', label: 'Other' },
-]
-
 function AddTransactionDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
   const { state, dispatch } = useBudget();
@@ -108,7 +71,7 @@ function AddTransactionDialog() {
   
   const defaultMoneySourceId = state.moneySources.length > 0 ? state.moneySources[0].id : '';
 
-  const form = useForm<z.infer<typeof transactionSchema>>({
+  const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: { description: '', amount: '', category: '', moneySourceId: defaultMoneySourceId, type: 'income', date: new Date(), affectBalance: true },
   });
@@ -120,7 +83,7 @@ function AddTransactionDialog() {
   }, [state.moneySources, form]);
 
 
-  function onSubmit(values: z.infer<typeof transactionSchema>) {
+  function onSubmit(values: TransactionFormValues) {
     dispatch({ type: 'ADD_TRANSACTION', payload: {
         description: values.description || '',
         amount: parseFormattedNumber(values.amount),
@@ -197,7 +160,6 @@ function AddTransactionDialog() {
                       <FormattedInput
                         field={field}
                         placeholder="55"
-                        onButtonClick={(value) => field.onChange(formatNumberWithCommas((parseFormattedNumber(field.value) || 0).toString() + value))}
                       />
                    </FormControl>
                   <FormMessage />
@@ -221,7 +183,7 @@ function AddTransactionDialog() {
                     <FormItem className="flex flex-col">
                       <FormLabel>Category</FormLabel>
                         <Combobox
-                            options={categorySuggestions}
+                            options={[...CATEGORY_SUGGESTIONS]}
                             value={field.value || ''}
                             onChange={field.onChange}
                             placeholder="Select or type..."
@@ -302,22 +264,16 @@ function AddTransactionDialog() {
   );
 }
 
-const featuredTransactionSchema = z.object({
-    description: z.string().optional(),
-    category: z.string().min(1, "Category is required."),
-    amount: z.string().refine(val => parseFormattedNumber(val) > 0, 'Amount must be greater than zero.'),
-});
-
 function AddFeaturedTransactionDialog() {
     const [isOpen, setIsOpen] = React.useState(false);
     const { dispatch } = useBudget();
     const { toast } = useToast();
-    const form = useForm<z.infer<typeof featuredTransactionSchema>>({
+    const form = useForm<FeaturedTransactionFormValues>({
         resolver: zodResolver(featuredTransactionSchema),
         defaultValues: { description: '', category: '', amount: '' },
     });
 
-    function onSubmit(values: z.infer<typeof featuredTransactionSchema>) {
+    function onSubmit(values: FeaturedTransactionFormValues) {
         dispatch({ 
             type: 'ADD_FEATURED_TRANSACTION', 
             payload: { 
@@ -369,7 +325,6 @@ function AddFeaturedTransactionDialog() {
                                     <FormattedInput
                                         field={field}
                                         placeholder="15"
-                                        onButtonClick={(value) => field.onChange(formatNumberWithCommas((parseFormattedNumber(field.value) || 0).toString() + value))}
                                     />
                                 </FormControl>
                                 <FormMessage />
@@ -387,26 +342,14 @@ function AddFeaturedTransactionDialog() {
     );
 }
 
-const historyIconMap: { [key: string]: { icon: React.ElementType, color: string } } = {
-    'created': { icon: FilePlus, color: 'text-green-500' },
-    'updated': { icon: Wrench, color: 'text-blue-500' },
-    'deleted': { icon: FileMinus, color: 'text-red-500' },
-    'transaction': { icon: CircleDollarSign, color: 'text-yellow-500' },
-    'adjusted': { icon: History, color: 'text-purple-500' },
-    'added featured': { icon: Heart, color: 'text-pink-500' },
-    'removed featured': { icon: Heart, color: 'text-gray-500' },
-    'data imported': { icon: Download, color: 'text-indigo-500' },
-};
-
+/**
+ * Helper to render history icons based on log description.
+ * Uses centralized config from constants.
+ */
 function getHistoryIcon(description: string) {
-    const lowerCaseDesc = description.toLowerCase();
-    for (const key in historyIconMap) {
-        if (lowerCaseDesc.startsWith(key)) {
-            const { icon, color } = historyIconMap[key];
-            return React.createElement(icon, { className: `h-4 w-4 ${color}` });
-        }
-    }
-    return <History className="h-4 w-4 text-muted-foreground" />;
+    const config = getHistoryIconConfig(description);
+    const IconComponent = config.icon;
+    return <IconComponent className={`h-4 w-4 ${config.color}`} />;
 }
 
 export function AddTransactionButton() {

@@ -3,10 +3,16 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useBudget } from '@/contexts/budget-context';
 import type { MoneySource } from '@/lib/types';
-import { formatCurrency, formatNumberWithCommas, parseFormattedNumber } from '@/lib/utils';
+import { formatCurrency, parseFormattedNumber } from '@/lib/utils';
+import { 
+  moneySourceSchema, 
+  updateBalanceSchema,
+  type MoneySourceFormValues,
+  type UpdateBalanceFormValues 
+} from '@/lib/schemas';
+import { FormattedInput } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -38,39 +44,7 @@ import { MoreHorizontal, PlusCircle, Trash, Pen } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
-import { CardHeader, CardTitle, CardDescription, CardContent } from '../ui/card';
-
-const moneySourceSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters.'),
-  budget: z.string().refine(value => !isNaN(parseFormattedNumber(value)) && parseFormattedNumber(value) > 0, {
-    message: "Budget must be a positive number.",
-  }),
-  balance: z.string().refine(value => !isNaN(parseFormattedNumber(value)), {
-    message: "Balance must be a valid number.",
-  }),
-});
-
-
-function FormattedInput({ field, placeholder, onButtonClick }: { field: any, placeholder?: string, onButtonClick?: (value: string) => void }) {
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const rawValue = e.target.value.replace(/,/g, '');
-      if (/^\d*\.?\d*$/.test(rawValue)) { // Allow digits and one decimal point
-        field.onChange(formatNumberWithCommas(rawValue));
-      }
-    };
-  
-    return (
-        <div className="relative">
-            <Input placeholder={placeholder} {...field} onChange={handleInputChange} />
-            {onButtonClick && (
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
-                    <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('00')}>00</Button>
-                    <Button type="button" size="sm" variant="ghost" className="h-7" onClick={() => onButtonClick('000')}>000</Button>
-                </div>
-            )}
-        </div>
-    );
-}
+import { formatNumberWithCommas } from '@/lib/utils';
 
 function MoneySourceForm({
   source,
@@ -81,7 +55,7 @@ function MoneySourceForm({
 }) {
   const { dispatch } = useBudget();
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof moneySourceSchema>>({
+  const form = useForm<MoneySourceFormValues>({
     resolver: zodResolver(moneySourceSchema),
     defaultValues: {
       name: source?.name || '',
@@ -90,7 +64,7 @@ function MoneySourceForm({
     },
   });
 
-  function onSubmit(values: z.infer<typeof moneySourceSchema>) {
+  function onSubmit(values: MoneySourceFormValues) {
     const numericValues = {
         name: values.name,
         budget: parseFormattedNumber(values.budget),
@@ -134,8 +108,7 @@ function MoneySourceForm({
                   <FormattedInput 
                     field={field} 
                     placeholder="500" 
-                    onButtonClick={(value) => field.onChange((field.value || '') + value)}
-                    />
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -151,8 +124,7 @@ function MoneySourceForm({
                   <FormattedInput 
                     field={field} 
                     placeholder="1,200"
-                    onButtonClick={(value) => field.onChange((field.value || '') + value)}
-                    />
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -193,18 +165,12 @@ function AddEditMoneySourceDialog({
   );
 }
 
-const updateBalanceSchema = z.object({
-    newBalance: z.string().refine(val => !isNaN(parseFormattedNumber(val)), {
-        message: "Please enter a valid number.",
-    }),
-});
-
 function UpdateBalanceDialog({ source, children }: { source: MoneySource, children: React.ReactNode }) {
     const [isOpen, setIsOpen] = React.useState(false);
     const { dispatch } = useBudget();
     const { toast } = useToast();
 
-    const form = useForm<z.infer<typeof updateBalanceSchema>>({
+    const form = useForm<UpdateBalanceFormValues>({
         resolver: zodResolver(updateBalanceSchema),
         defaultValues: { newBalance: formatNumberWithCommas(source.balance) }
     });
@@ -213,7 +179,7 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
     const parsedNewBalance = parseFormattedNumber(newBalanceValue);
     const difference = parsedNewBalance - source.balance;
 
-    function onSubmit(values: z.infer<typeof updateBalanceSchema>) {
+    function onSubmit(values: UpdateBalanceFormValues) {
         const newBalance = parseFormattedNumber(values.newBalance);
         dispatch({
             type: 'ADJUST_BALANCE',
@@ -261,10 +227,7 @@ function UpdateBalanceDialog({ source, children }: { source: MoneySource, childr
                             <FormItem>
                                 <FormLabel>New Balance</FormLabel>
                                 <FormControl>
-                                    <FormattedInput 
-                                      field={field} 
-                                      onButtonClick={(value) => field.onChange((field.value || '') + value)}
-                                    />
+                                    <FormattedInput field={field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

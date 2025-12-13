@@ -1,2 +1,3 @@
 - Refer to context files in "/docs"
 - Update the context files in "/docs" if something changes in refactoring progress
+- Follow refactoring strategy in "/docs/refactoring-strategy.md", log the refactoring summary to /refactoring_history 
