@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import type { BudgetState, MoneySource, Transaction, FeaturedTransaction } from '@/lib/types';
+import type { BudgetState, MoneySource, Transaction, FeaturedTransaction, TransactionTemplate } from '@/lib/types';
 import { STORAGE_KEY } from '@/lib/constants';
 import {
   initialBudgetState,
@@ -14,6 +14,9 @@ import {
   handleDeleteTransaction,
   handleAddFeaturedTransaction,
   handleDeleteFeaturedTransaction,
+  handleAddTemplate,
+  handleUpdateTemplate,
+  handleDeleteTemplate,
   handleSetCurrentMonth,
   handleImportData,
   migrateState,
@@ -29,6 +32,9 @@ type Action =
   | { type: 'DELETE_TRANSACTION'; payload: Transaction }
   | { type: 'ADD_FEATURED_TRANSACTION'; payload: Omit<FeaturedTransaction, 'id'|'date'> }
   | { type: 'DELETE_FEATURED_TRANSACTION'; payload: string }
+  | { type: 'ADD_TEMPLATE'; payload: Omit<TransactionTemplate, 'id'> }
+  | { type: 'UPDATE_TEMPLATE'; payload: TransactionTemplate }
+  | { type: 'DELETE_TEMPLATE'; payload: string }
   | { type: 'IMPORT_DATA'; payload: { state: BudgetState; strategy: 'REPLACE' | 'NEXT_MONTH' } }
   | { type: 'ADJUST_BALANCE'; payload: { moneySourceId: string; newBalance: number } }
   | { type: 'SET_CURRENT_MONTH'; payload: Date };
@@ -71,6 +77,15 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 
     case 'DELETE_FEATURED_TRANSACTION':
       return handleDeleteFeaturedTransaction(state, action.payload);
+
+    case 'ADD_TEMPLATE':
+      return handleAddTemplate(state, action.payload);
+
+    case 'UPDATE_TEMPLATE':
+      return handleUpdateTemplate(state, action.payload);
+
+    case 'DELETE_TEMPLATE':
+      return handleDeleteTemplate(state, action.payload);
 
     case 'IMPORT_DATA':
       return handleImportData(state, action.payload);

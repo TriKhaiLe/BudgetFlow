@@ -21,17 +21,30 @@ Use this when booting up the repo to regain context fast.
 
 ## State Model (src/contexts/budget-context.tsx)
 
-- `BudgetState`: `moneySources`, `transactions`, `featuredTransactions`, `history`, `currentMonth` (ISO, startOfMonth default).
-- Actions include `ADD/UPDATE/DELETE_MONEY_SOURCE`, `ADD/UPDATE/DELETE_TRANSACTION`, `ADD/DELETE_FEATURED_TRANSACTION`, `ADJUST_BALANCE`, `SET_CURRENT_MONTH`, `IMPORT_DATA` strategies, `SET_INITIAL_STATE`.
+- `BudgetState`: `moneySources`, `transactions`, `featuredTransactions`, `transactionTemplates`, `history`, `currentMonth` (ISO, startOfMonth default).
+- Actions include `ADD/UPDATE/DELETE_MONEY_SOURCE`, `ADD/UPDATE/DELETE_TRANSACTION`, `ADD/DELETE_FEATURED_TRANSACTION`, `ADD/UPDATE/DELETE_TEMPLATE`, `ADJUST_BALANCE`, `SET_CURRENT_MONTH`, `IMPORT_DATA` strategies, `SET_INITIAL_STATE`.
 - Transactions: income increases budget and balance; expense increases spent and decreases balance; delete assumes transaction affected balance; update is shallow (does not rebalance) and logs a warning.
-- Migrations: on load, backfills `currentMonth`, coerces transaction types, ensures arrays exist.
-- **Reducer Architecture (Refactored Dec 2025)**: Action handlers split into `src/contexts/reducers/` with separate files for money sources, transactions, state, and history helpers.
+- Templates: reusable transaction presets with `useCurrentDate` flag to auto-fill today's date when applied.
+- Migrations: on load, backfills `currentMonth`, coerces transaction types, ensures arrays exist (including `transactionTemplates`).
+- **Reducer Architecture (Refactored Dec 2025)**: Action handlers split into `src/contexts/reducers/` with separate files for money sources, transactions, templates, state, and history helpers.
 
 ## Shared Code (Refactored Dec 2025)
 
 - **Constants** (`src/lib/constants.ts`): `CATEGORY_SUGGESTIONS`, `HISTORY_ICON_MAP`, `STORAGE_KEY`, `getHistoryIconConfig()`.
-- **Schemas** (`src/lib/schemas.ts`): Zod validation schemas: `moneySourceSchema`, `transactionSchema`, `featuredTransactionSchema`, `updateBalanceSchema`, `aiAssistantSchema`.
+- **Schemas** (`src/lib/schemas.ts`): Zod validation schemas: `moneySourceSchema`, `transactionSchema`, `featuredTransactionSchema`, `transactionTemplateSchema`, `updateBalanceSchema`, `aiAssistantSchema`.
 - **Shared Components** (`src/components/shared/`): `FormattedInput` - reusable number input with comma formatting and quick-add buttons.
+
+## Transaction Templates (Added Dec 2025)
+
+- **Purpose**: Reusable presets for quick transaction entry. Templates store: name, description, amount, category, money source, type (income/expense), useCurrentDate flag, affectBalance flag.
+- **Components**: `src/components/dashboard/templates-view.tsx` contains `TemplatesView`, `TemplateFormDialog`, `AddTemplateButton`.
+- **Usage Flow**:
+  1. Create templates via Templates tab or from Add Transaction dialog
+  2. In Add Transaction dialog, click "Use Template" dropdown
+  3. Select template to auto-fill form fields
+  4. If `useCurrentDate` is true, date is set to today
+- **State**: Templates stored in `state.transactionTemplates`, persisted to localStorage.
+- **Reducer**: `template-actions.ts` handles `ADD_TEMPLATE`, `UPDATE_TEMPLATE`, `DELETE_TEMPLATE`.
 
 ## AI Flows (src/ai)
 

@@ -5,6 +5,7 @@ import { AIAssistantDialog } from './ai-assistant-dialog';
 import { DataManagement } from './data-management';
 import { BudgetMonthSelector } from './budget-month-selector';
 import { HelpDialog } from './help-dialog';
+import { TemplatesManagementDialog } from './templates-management-dialog';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Wallet } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export default function DashboardHeader() {
               <span className="font-bold">BudgetFlow</span>
             </div>
             <div className='flex flex-col gap-4'>
+                <TemplatesManagementDialog />
                 <AIAssistantDialog />
                 <DataManagement />
                 <HelpDialog />
@@ -47,6 +49,7 @@ export default function DashboardHeader() {
       <div className="flex w-full items-center justify-end gap-4">
         <BudgetMonthSelector />
         <div className="hidden md:flex items-center gap-2">
+            <TemplatesManagementDialog />
             <AIAssistantDialog />
             <DataManagement />
             <HelpDialog />

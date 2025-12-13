@@ -13,6 +13,11 @@ export {
   handleDeleteFeaturedTransaction,
 } from './transaction-actions';
 export {
+  handleAddTemplate,
+  handleUpdateTemplate,
+  handleDeleteTemplate,
+} from './template-actions';
+export {
   initialBudgetState,
   handleSetCurrentMonth,
   handleImportData,

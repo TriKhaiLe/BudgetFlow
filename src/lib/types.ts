@@ -24,6 +24,17 @@ export interface FeaturedTransaction {
   date: string;
 }
 
+export interface TransactionTemplate {
+  id: string;
+  name: string;
+  description: string;
+  amount: number;
+  category: string;
+  moneySourceId: string;
+  type: 'income' | 'expense';
+  affectBalance: boolean;
+}
+
 export interface HistoryLog {
   id: string;
   description: string;
@@ -34,6 +45,7 @@ export interface BudgetState {
   moneySources: MoneySource[];
   transactions: Transaction[];
   featuredTransactions: FeaturedTransaction[];
+  transactionTemplates: TransactionTemplate[];
   history: HistoryLog[];
   currentMonth: string;
 }

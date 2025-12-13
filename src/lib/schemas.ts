@@ -93,3 +93,18 @@ export const aiAssistantSchema = z.object({
 });
 
 export type AiAssistantFormValues = z.infer<typeof aiAssistantSchema>;
+
+/**
+ * Schema for transaction template form validation.
+ */
+export const transactionTemplateSchema = z.object({
+  name: z.string().min(1, 'Template name is required.'),
+  description: z.string().optional(),
+  amount: positiveAmountSchema,
+  category: z.string().optional(),
+  moneySourceId: z.string().min(1, 'Please select a money source.'),
+  type: z.enum(['income', 'expense']),
+  affectBalance: z.boolean(),
+});
+
+export type TransactionTemplateFormValues = z.infer<typeof transactionTemplateSchema>;

@@ -10,6 +10,7 @@ export const initialBudgetState: BudgetState = {
   moneySources: [],
   transactions: [],
   featuredTransactions: [],
+  transactionTemplates: [],
   history: [],
   currentMonth: startOfMonth(new Date()).toISOString(),
 };
@@ -94,6 +95,9 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   // Ensure arrays exist
   if (!parsedState.featuredTransactions) {
     parsedState.featuredTransactions = [];
+  }
+  if (!parsedState.transactionTemplates) {
+    parsedState.transactionTemplates = [];
   }
   if (!parsedState.history) {
     parsedState.history = [];
