@@ -21,5 +21,6 @@ export {
   initialBudgetState,
   handleSetCurrentMonth,
   handleImportData,
+  handleStartNewMonth,
   migrateState,
 } from './state-actions';

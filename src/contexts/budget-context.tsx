@@ -1,8 +1,21 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import type { BudgetState, MoneySource, Transaction, FeaturedTransaction, TransactionTemplate } from '@/lib/types';
-import { STORAGE_KEY } from '@/lib/constants';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+  Dispatch,
+} from "react";
+import type {
+  BudgetState,
+  MoneySource,
+  Transaction,
+  FeaturedTransaction,
+  TransactionTemplate,
+} from "@/lib/types";
+import { STORAGE_KEY } from "@/lib/constants";
 import {
   initialBudgetState,
   handleAddMoneySource,
@@ -19,25 +32,39 @@ import {
   handleDeleteTemplate,
   handleSetCurrentMonth,
   handleImportData,
+  handleStartNewMonth,
   migrateState,
-} from './reducers';
+} from "./reducers";
 
 type Action =
-  | { type: 'SET_INITIAL_STATE'; payload: BudgetState }
-  | { type: 'ADD_MONEY_SOURCE'; payload: Omit<MoneySource, 'id' | 'spent'> }
-  | { type: 'UPDATE_MONEY_SOURCE'; payload: MoneySource }
-  | { type: 'DELETE_MONEY_SOURCE'; payload: string }
-  | { type: 'ADD_TRANSACTION'; payload: Omit<Transaction, 'id'> & { affectBalance: boolean } }
-  | { type: 'UPDATE_TRANSACTION'; payload: Transaction }
-  | { type: 'DELETE_TRANSACTION'; payload: Transaction }
-  | { type: 'ADD_FEATURED_TRANSACTION'; payload: Omit<FeaturedTransaction, 'id'|'date'> }
-  | { type: 'DELETE_FEATURED_TRANSACTION'; payload: string }
-  | { type: 'ADD_TEMPLATE'; payload: Omit<TransactionTemplate, 'id'> }
-  | { type: 'UPDATE_TEMPLATE'; payload: TransactionTemplate }
-  | { type: 'DELETE_TEMPLATE'; payload: string }
-  | { type: 'IMPORT_DATA'; payload: { state: BudgetState; strategy: 'REPLACE' | 'NEXT_MONTH' } }
-  | { type: 'ADJUST_BALANCE'; payload: { moneySourceId: string; newBalance: number } }
-  | { type: 'SET_CURRENT_MONTH'; payload: Date };
+  | { type: "SET_INITIAL_STATE"; payload: BudgetState }
+  | { type: "ADD_MONEY_SOURCE"; payload: Omit<MoneySource, "id" | "spent"> }
+  | { type: "UPDATE_MONEY_SOURCE"; payload: MoneySource }
+  | { type: "DELETE_MONEY_SOURCE"; payload: string }
+  | {
+      type: "ADD_TRANSACTION";
+      payload: Omit<Transaction, "id"> & { affectBalance: boolean };
+    }
+  | { type: "UPDATE_TRANSACTION"; payload: Transaction }
+  | { type: "DELETE_TRANSACTION"; payload: Transaction }
+  | {
+      type: "ADD_FEATURED_TRANSACTION";
+      payload: Omit<FeaturedTransaction, "id" | "date">;
+    }
+  | { type: "DELETE_FEATURED_TRANSACTION"; payload: string }
+  | { type: "ADD_TEMPLATE"; payload: Omit<TransactionTemplate, "id"> }
+  | { type: "UPDATE_TEMPLATE"; payload: TransactionTemplate }
+  | { type: "DELETE_TEMPLATE"; payload: string }
+  | {
+      type: "IMPORT_DATA";
+      payload: { state: BudgetState; strategy: "REPLACE" | "NEXT_MONTH" };
+    }
+  | {
+      type: "ADJUST_BALANCE";
+      payload: { moneySourceId: string; newBalance: number };
+    }
+  | { type: "SET_CURRENT_MONTH"; payload: Date }
+  | { type: "START_NEW_MONTH" };
 
 /**
  * Budget reducer - handles all state mutations.
@@ -45,57 +72,62 @@ type Action =
  */
 const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
   switch (action.type) {
-    case 'SET_INITIAL_STATE':
+    case "SET_INITIAL_STATE":
       return action.payload;
 
-    case 'SET_CURRENT_MONTH':
+    case "SET_CURRENT_MONTH":
       return handleSetCurrentMonth(state, action.payload);
 
-    case 'ADD_MONEY_SOURCE':
+    case "ADD_MONEY_SOURCE":
       return handleAddMoneySource(state, action.payload);
 
-    case 'UPDATE_MONEY_SOURCE':
+    case "UPDATE_MONEY_SOURCE":
       return handleUpdateMoneySource(state, action.payload);
 
-    case 'ADJUST_BALANCE':
+    case "ADJUST_BALANCE":
       return handleAdjustBalance(state, action.payload);
 
-    case 'DELETE_MONEY_SOURCE':
+    case "DELETE_MONEY_SOURCE":
       return handleDeleteMoneySource(state, action.payload);
 
-    case 'ADD_TRANSACTION':
+    case "ADD_TRANSACTION":
       return handleAddTransaction(state, action.payload);
 
-    case 'UPDATE_TRANSACTION':
+    case "UPDATE_TRANSACTION":
       return handleUpdateTransaction(state, action.payload);
 
-    case 'DELETE_TRANSACTION':
+    case "DELETE_TRANSACTION":
       return handleDeleteTransaction(state, action.payload);
 
-    case 'ADD_FEATURED_TRANSACTION':
+    case "ADD_FEATURED_TRANSACTION":
       return handleAddFeaturedTransaction(state, action.payload);
 
-    case 'DELETE_FEATURED_TRANSACTION':
+    case "DELETE_FEATURED_TRANSACTION":
       return handleDeleteFeaturedTransaction(state, action.payload);
 
-    case 'ADD_TEMPLATE':
+    case "ADD_TEMPLATE":
       return handleAddTemplate(state, action.payload);
 
-    case 'UPDATE_TEMPLATE':
+    case "UPDATE_TEMPLATE":
       return handleUpdateTemplate(state, action.payload);
 
-    case 'DELETE_TEMPLATE':
+    case "DELETE_TEMPLATE":
       return handleDeleteTemplate(state, action.payload);
 
-    case 'IMPORT_DATA':
+    case "IMPORT_DATA":
       return handleImportData(state, action.payload);
+
+    case "START_NEW_MONTH":
+      return handleStartNewMonth(state);
 
     default:
       return state;
   }
 };
 
-const BudgetContext = createContext<{ state: BudgetState; dispatch: Dispatch<Action> } | undefined>(undefined);
+const BudgetContext = createContext<
+  { state: BudgetState; dispatch: Dispatch<Action> } | undefined
+>(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(budgetReducer, initialBudgetState);
@@ -107,12 +139,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       if (storedState) {
         const parsedState = JSON.parse(storedState) as BudgetState;
         const migratedState = migrateState(parsedState);
-        dispatch({ type: 'SET_INITIAL_STATE', payload: migratedState });
+        dispatch({ type: "SET_INITIAL_STATE", payload: migratedState });
       }
     } catch (error) {
-      console.error('Failed to load state from localStorage', error);
+      console.error("Failed to load state from localStorage", error);
       // If parsing fails, start with a clean slate
-      dispatch({ type: 'SET_INITIAL_STATE', payload: initialBudgetState });
+      dispatch({ type: "SET_INITIAL_STATE", payload: initialBudgetState });
     }
     setIsInitialized(true);
   }, []);
@@ -122,14 +154,20 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       } catch (error) {
-        console.error('Failed to save state to localStorage', error);
+        console.error("Failed to save state to localStorage", error);
       }
     }
   }, [state, isInitialized]);
 
   return (
     <BudgetContext.Provider value={{ state, dispatch }}>
-      {isInitialized ? children : <div className="flex h-screen items-center justify-center">Loading Budget...</div>}
+      {isInitialized ? (
+        children
+      ) : (
+        <div className="flex h-screen items-center justify-center">
+          Loading Budget...
+        </div>
+      )}
     </BudgetContext.Provider>
   );
 };
@@ -137,7 +175,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 export const useBudget = () => {
   const context = useContext(BudgetContext);
   if (context === undefined) {
-    throw new Error('useBudget must be used within a BudgetProvider');
+    throw new Error("useBudget must be used within a BudgetProvider");
   }
   return context;
 };

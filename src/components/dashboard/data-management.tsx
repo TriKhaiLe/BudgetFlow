@@ -30,10 +30,9 @@ export function DataManagement() {
 
       const budgetDate = state.currentMonth ? new Date(state.currentMonth) : new Date();
       const monthYear = format(budgetDate, 'MMMM-yyyy');
-      const exportDate = format(new Date(), 'yyyy-MM-dd');
-      
+
       a.href = url;
-      a.download = `budgetflow-backup_${monthYear}_(exported_on_${exportDate}).json`;
+      a.download = `${monthYear}_budget-report.json`;
 
       document.body.appendChild(a);
       a.click();

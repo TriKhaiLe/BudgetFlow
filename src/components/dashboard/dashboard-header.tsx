@@ -1,13 +1,14 @@
-'use client';
-import { Logo } from '@/components/logo';
-import { Button } from '@/components/ui/button';
-import { AIAssistantDialog } from './ai-assistant-dialog';
-import { DataManagement } from './data-management';
-import { BudgetMonthSelector } from './budget-month-selector';
-import { HelpDialog } from './help-dialog';
-import { TemplatesManagementDialog } from './templates-management-dialog';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Wallet } from 'lucide-react';
+"use client";
+import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { AIAssistantDialog } from "./ai-assistant-dialog";
+import { DataManagement } from "./data-management";
+import { BudgetMonthSelector } from "./budget-month-selector";
+import { HelpDialog } from "./help-dialog";
+import { TemplatesManagementDialog } from "./templates-management-dialog";
+import { StartNewMonthButton } from "./start-new-month-button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Wallet } from "lucide-react";
 
 export default function DashboardHeader() {
   return (
@@ -15,7 +16,7 @@ export default function DashboardHeader() {
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Logo />
       </nav>
-      
+
       {/* Mobile Menu */}
       <Sheet>
         <SheetTrigger asChild>
@@ -30,29 +31,29 @@ export default function DashboardHeader() {
             <p>Access AI Assistant, Data Management, and Help options</p>
           </div>
           <nav className="grid gap-6 text-lg font-medium">
-            <div
-              className='flex items-center gap-2 text-lg font-semibold text-primary'
-            >
+            <div className="flex items-center gap-2 text-lg font-semibold text-primary">
               <Wallet className="h-6 w-6" />
               <span className="font-bold">BudgetFlow</span>
             </div>
-            <div className='flex flex-col gap-4'>
-                <TemplatesManagementDialog />
-                <AIAssistantDialog />
-                <DataManagement />
-                <HelpDialog />
+            <div className="flex flex-col gap-4">
+              <StartNewMonthButton />
+              <TemplatesManagementDialog />
+              <AIAssistantDialog />
+              <DataManagement />
+              <HelpDialog />
             </div>
           </nav>
         </SheetContent>
       </Sheet>
-      
+
       <div className="flex w-full items-center justify-end gap-4">
         <BudgetMonthSelector />
         <div className="hidden md:flex items-center gap-2">
-            <TemplatesManagementDialog />
-            <AIAssistantDialog />
-            <DataManagement />
-            <HelpDialog />
+          <StartNewMonthButton />
+          <TemplatesManagementDialog />
+          <AIAssistantDialog />
+          <DataManagement />
+          <HelpDialog />
         </div>
       </div>
     </header>

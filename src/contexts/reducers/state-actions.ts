@@ -33,6 +33,36 @@ export function handleSetCurrentMonth(
 }
 
 /**
+ * Handles starting a new month by using current balances as budgets.
+ * Logs detailed balance information to history and moves to next month.
+ */
+export function handleStartNewMonth(state: BudgetState): BudgetState {
+  const currentDate = new Date(state.currentMonth);
+  const nextMonth = new Date(currentDate);
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+  // Log current balances to history
+  const balanceLog = state.moneySources.map(ms => 
+    `${ms.name}: ${ms.balance.toLocaleString('vi-VN')} VND`
+  ).join(', ');
+  
+  const historyMessage = `Started new month (${format(nextMonth, 'MMMM yyyy')}). Previous balances: ${balanceLog}`;
+
+  return {
+    ...state,
+    currentMonth: startOfMonth(nextMonth).toISOString(),
+    moneySources: state.moneySources.map((ms) => ({
+      ...ms,
+      budget: ms.balance, // Use current balance as next month's budget
+      spent: 0, // Reset spending
+    })),
+    transactions: [], // Clear all transactions
+    featuredTransactions: [], // Clear featured transactions
+    history: [createHistoryEntry(historyMessage)], // Start fresh history with current balances logged
+  };
+}
+
+/**
  * Handles importing data with different strategies.
  */
 export function handleImportData(
