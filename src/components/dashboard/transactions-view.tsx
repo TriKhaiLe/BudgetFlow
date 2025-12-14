@@ -80,6 +80,8 @@ function AddTransactionDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = React.useState(false);
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = React.useState(false);
+  const [saveAsTemplate, setSaveAsTemplate] = React.useState(false);
+  const [templateName, setTemplateName] = React.useState("");
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
 
@@ -132,6 +134,7 @@ function AddTransactionDialog() {
   };
 
   function onSubmit(values: TransactionFormValues) {
+    // Add the transaction
     dispatch({
       type: "ADD_TRANSACTION",
       payload: {
@@ -144,7 +147,29 @@ function AddTransactionDialog() {
         affectBalance: values.affectBalance,
       },
     });
-    toast({ title: "Success", description: "Transaction added." });
+
+    // If save as template is checked, create a template
+    if (saveAsTemplate && templateName.trim()) {
+      dispatch({
+        type: "ADD_TEMPLATE",
+        payload: {
+          name: templateName.trim(),
+          description: values.description || "",
+          amount: parseFormattedNumber(values.amount),
+          category: values.category || "",
+          moneySourceId: values.moneySourceId,
+          type: values.type,
+          affectBalance: values.affectBalance,
+        },
+      });
+      toast({
+        title: "Success",
+        description: "Transaction added and template created.",
+      });
+    } else {
+      toast({ title: "Success", description: "Transaction added." });
+    }
+
     form.reset({
       description: "",
       amount: "",
@@ -154,6 +179,8 @@ function AddTransactionDialog() {
       date: new Date(),
       affectBalance: true,
     });
+    setSaveAsTemplate(false);
+    setTemplateName("");
     setIsOpen(false);
   }
 
@@ -172,6 +199,8 @@ function AddTransactionDialog() {
               date: new Date(),
               affectBalance: true,
             });
+            setSaveAsTemplate(false);
+            setTemplateName("");
           }
           setIsOpen(open);
         }}
@@ -435,10 +464,42 @@ function AddTransactionDialog() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Save as Template Option */}
+                  <div className="rounded-lg border p-3 shadow-sm space-y-3">
+                    <div className="flex flex-row items-center justify-between">
+                      <div className="space-y-0.5">
+                        <FormLabel>Save as Template</FormLabel>
+                        <FormDescription>
+                          Create a reusable template from this transaction.
+                        </FormDescription>
+                      </div>
+                      <Switch
+                        checked={saveAsTemplate}
+                        onCheckedChange={setSaveAsTemplate}
+                      />
+                    </div>
+                    {saveAsTemplate && (
+                      <div>
+                        <FormLabel>Template Name *</FormLabel>
+                        <Input
+                          placeholder="e.g., Monthly Rent Payment"
+                          value={templateName}
+                          onChange={(e) => setTemplateName(e.target.value)}
+                          className="mt-2"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter className="px-4 pb-4 pt-4 border-t">
-                <Button type="submit">Add Transaction</Button>
+                <Button
+                  type="submit"
+                  disabled={saveAsTemplate && !templateName.trim()}
+                >
+                  Add Transaction
+                </Button>
               </DialogFooter>
             </form>
           </Form>
