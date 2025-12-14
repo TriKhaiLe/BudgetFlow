@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+} from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 type CollapsibleCardProps = {
   title: string;
@@ -41,11 +41,18 @@ export function CollapsibleCard({
             </div>
             <ChevronDown
               className={`h-5 w-5 text-muted-foreground transition-transform group-hover:text-foreground ${
-                isOpen ? 'rotate-180' : ''
+                isOpen ? "rotate-180" : ""
               }`}
             />
           </CollapsibleTrigger>
-          {action && <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>{action}</div>}
+          {action && !isOpen && (
+            <div
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {action}
+            </div>
+          )}
         </div>
         <CollapsibleContent>
           <CardContent>{children}</CardContent>

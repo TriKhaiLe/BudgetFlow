@@ -572,6 +572,7 @@ export function AddTransactionButton() {
 export default function TransactionsView() {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = React.useState("transactions");
 
   const handleDeleteTransaction = (transaction: Transaction) => {
     if (confirm(`Are you sure you want to delete this transaction?`)) {
@@ -591,12 +592,22 @@ export default function TransactionsView() {
   };
 
   return (
-    <Tabs defaultValue="transactions" className="w-full">
-      <TabsList className="flex-wrap h-auto">
-        <TabsTrigger value="transactions">Transactions</TabsTrigger>
-        <TabsTrigger value="featured">Featured</TabsTrigger>
-        <TabsTrigger value="history">History</TabsTrigger>
-      </TabsList>
+    <Tabs
+      defaultValue="transactions"
+      className="w-full"
+      onValueChange={setActiveTab}
+    >
+      <div className="flex justify-between items-center gap-2 mb-4">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="featured">Featured</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
+        <div className="flex gap-2">
+          {activeTab === "transactions" && <AddTransactionDialog />}
+          {activeTab === "featured" && <AddFeaturedTransactionDialog />}
+        </div>
+      </div>
       <TabsContent value="transactions">
         <div className="overflow-auto max-h-[400px]">
           <Table>
