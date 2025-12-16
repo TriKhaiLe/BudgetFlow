@@ -71,11 +71,14 @@ export function handleImportData(
 ): BudgetState {
   const { state: importedState, strategy } = payload;
 
+  // Always migrate the imported state to ensure all required fields exist
+  const migratedImportedState = migrateState(importedState);
+
   if (strategy === 'REPLACE') {
     return {
-      ...importedState,
+      ...migratedImportedState,
       history: [
-        ...(importedState.history || []),
+        ...(migratedImportedState.history || []),
         createHistoryEntry('Data imported and replaced.'),
       ],
     };
@@ -88,7 +91,7 @@ export function handleImportData(
     return {
       ...initialBudgetState,
       currentMonth: startOfMonth(nextMonth).toISOString(),
-      moneySources: importedState.moneySources.map((ms) => ({
+      moneySources: migratedImportedState.moneySources.map((ms) => ({
         ...ms,
         budget: ms.balance,
         spent: 0,
@@ -108,9 +111,12 @@ export function handleImportData(
  * Performs backward compatibility migrations on loaded state.
  */
 export function migrateState(parsedState: BudgetState): BudgetState {
+  const warnings: string[] = [];
+  
   // Ensure currentMonth exists
   if (!parsedState.currentMonth) {
     parsedState.currentMonth = startOfMonth(new Date()).toISOString();
+    warnings.push('Missing currentMonth, defaulted to current month');
   }
 
   // Migrate transaction types (backward compatibility)
@@ -125,12 +131,25 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   // Ensure arrays exist
   if (!parsedState.featuredTransactions) {
     parsedState.featuredTransactions = [];
+    warnings.push('Missing featuredTransactions');
   }
   if (!parsedState.transactionTemplates) {
     parsedState.transactionTemplates = [];
+    warnings.push('Missing transactionTemplates');
   }
   if (!parsedState.history) {
     parsedState.history = [];
+    warnings.push('Missing history');
+  }
+
+  // Log warnings if this is a legacy file
+  if (warnings.length > 0 && typeof window !== 'undefined') {
+    console.warn('Legacy file detected. Migration applied:', warnings);
+  }
+
+  // Remove metadata from state (it's only for export reference)
+  if (parsedState.metadata) {
+    delete parsedState.metadata;
   }
 
   return parsedState;

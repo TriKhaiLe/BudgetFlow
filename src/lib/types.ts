@@ -41,6 +41,14 @@ export interface HistoryLog {
   timestamp: string;
 }
 
+export interface BudgetMetadata {
+  exportDate: string;
+  month: number;
+  year: number;
+  monthLabel: string;
+  version: string;
+}
+
 export interface BudgetState {
   moneySources: MoneySource[];
   transactions: Transaction[];
@@ -48,4 +56,5 @@ export interface BudgetState {
   transactionTemplates: TransactionTemplate[];
   history: HistoryLog[];
   currentMonth: string;
+  metadata?: BudgetMetadata; // Optional for backward compatibility
 }
