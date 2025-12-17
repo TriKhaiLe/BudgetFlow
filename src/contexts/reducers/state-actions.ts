@@ -13,7 +13,21 @@ export const initialBudgetState: BudgetState = {
   transactionTemplates: [],
   history: [],
   currentMonth: startOfMonth(new Date()).toISOString(),
+  monthDescription: '',
 };
+
+/**
+ * Handles updating the month description.
+ */
+export function handleUpdateMonthDescription(
+  state: BudgetState,
+  description: string
+): BudgetState {
+  return {
+    ...state,
+    monthDescription: description,
+  };
+}
 
 /**
  * Handles setting the current budget month.
@@ -58,6 +72,7 @@ export function handleStartNewMonth(state: BudgetState): BudgetState {
     })),
     transactions: [], // Clear all transactions
     featuredTransactions: [], // Clear featured transactions
+    monthDescription: '', // Clear month description for the new month
     history: [createHistoryEntry(historyMessage)], // Start fresh history with current balances logged
   };
 }
@@ -140,6 +155,11 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   if (!parsedState.history) {
     parsedState.history = [];
     warnings.push('Missing history');
+  }
+
+  // Ensure monthDescription exists
+  if (parsedState.monthDescription === undefined) {
+    parsedState.monthDescription = '';
   }
 
   // Log warnings if this is a legacy file

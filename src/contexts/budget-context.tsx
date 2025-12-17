@@ -33,6 +33,7 @@ import {
   handleSetCurrentMonth,
   handleImportData,
   handleStartNewMonth,
+  handleUpdateMonthDescription,
   migrateState,
 } from "./reducers";
 
@@ -64,7 +65,8 @@ type Action =
       payload: { moneySourceId: string; newBalance: number };
     }
   | { type: "SET_CURRENT_MONTH"; payload: Date }
-  | { type: "START_NEW_MONTH" };
+  | { type: "START_NEW_MONTH" }
+  | { type: "UPDATE_MONTH_DESCRIPTION"; payload: string };
 
 /**
  * Budget reducer - handles all state mutations.
@@ -119,6 +121,9 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 
     case "START_NEW_MONTH":
       return handleStartNewMonth(state);
+
+    case "UPDATE_MONTH_DESCRIPTION":
+      return handleUpdateMonthDescription(state, action.payload);
 
     default:
       return state;

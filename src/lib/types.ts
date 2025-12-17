@@ -56,5 +56,6 @@ export interface BudgetState {
   transactionTemplates: TransactionTemplate[];
   history: HistoryLog[];
   currentMonth: string;
+  monthDescription?: string; // Optional description/notes for the current month
   metadata?: BudgetMetadata; // Optional for backward compatibility
 }

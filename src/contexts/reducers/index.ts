@@ -22,5 +22,6 @@ export {
   handleSetCurrentMonth,
   handleImportData,
   handleStartNewMonth,
+  handleUpdateMonthDescription,
   migrateState,
 } from './state-actions';

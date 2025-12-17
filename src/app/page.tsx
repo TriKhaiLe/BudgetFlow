@@ -11,6 +11,7 @@ import TransactionsView, {
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { Analytics } from "@/components/dashboard/analytics";
 import { CollapsibleCard } from "@/components/dashboard/collapsible-card";
+import { MonthDescription } from "@/components/dashboard/month-description";
 
 export default function Home() {
   return (
@@ -41,6 +42,13 @@ export default function Home() {
             action={<AddMoneySourceButton />}
           >
             <MoneySources />
+          </CollapsibleCard>
+
+          <CollapsibleCard
+            storageKey="month-description-collapsed"
+            title="Month Notes"
+          >
+            <MonthDescription />
           </CollapsibleCard>
         </main>
       </div>

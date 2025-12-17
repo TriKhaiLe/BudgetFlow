@@ -41,6 +41,7 @@ export function DataManagement() {
       // Add metadata to exported file
       const exportData = {
         ...state,
+        monthDescription: state.monthDescription || "",
         metadata: {
           exportDate: new Date().toISOString(),
           month: budgetDate.getMonth(),
