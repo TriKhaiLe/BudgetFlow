@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useBudget } from '@/contexts/budget-context';
-import type { TransactionTemplate } from '@/lib/types';
-import { formatCurrency, getCategoryColor } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useBudget } from "@/contexts/budget-context";
+import type { TransactionTemplate } from "@/lib/types";
+import { formatCurrency, getCategoryColor } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -20,24 +20,29 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { FileText, Edit, Trash, PlusCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '../ui/badge';
-import { TemplateFormDialog } from './templates-view';
+} from "@/components/ui/dialog";
+import { FileText, Edit, Trash, PlusCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "../ui/badge";
+import { TemplateFormDialog } from "./templates-view";
 
 export function TemplatesManagementDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
-  const [editingTemplate, setEditingTemplate] = React.useState<TransactionTemplate | null>(null);
+  const [editingTemplate, setEditingTemplate] =
+    React.useState<TransactionTemplate | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
 
   const handleDeleteTemplate = (template: TransactionTemplate) => {
-    if (confirm(`Are you sure you want to delete the template "${template.name}"?`)) {
-      dispatch({ type: 'DELETE_TEMPLATE', payload: template.id });
-      toast({ title: 'Deleted', description: 'Template has been deleted.' });
+    if (
+      confirm(
+        `Are you sure you want to delete the template "${template.name}"?`
+      )
+    ) {
+      dispatch({ type: "DELETE_TEMPLATE", payload: template.id });
+      toast({ title: "Deleted", description: "Template has been deleted." });
     }
   };
 
@@ -50,7 +55,11 @@ export function TemplatesManagementDialog() {
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 whitespace-nowrap flex-shrink-0"
+          >
             <FileText className="h-4 w-4" />
             <span className="md:hidden">Templates</span>
             <span className="hidden md:inline">Templates</span>
@@ -75,13 +84,15 @@ export function TemplatesManagementDialog() {
               </Button>
             </div>
           </DialogHeader>
-          
+
           <div className="overflow-y-auto px-4 pb-4 max-h-[calc(90vh-180px)]">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Description</TableHead>
+                  <TableHead className="hidden sm:table-cell">
+                    Description
+                  </TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead className="hidden sm:table-cell">Source</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
@@ -101,29 +112,37 @@ export function TemplatesManagementDialog() {
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-muted-foreground">
-                        {template.description || '-'}
+                        {template.description || "-"}
                       </TableCell>
                       <TableCell>
                         {template.category ? (
                           <Badge
                             variant="outline"
-                            style={{ backgroundColor: getCategoryColor(template.category) }}
+                            style={{
+                              backgroundColor: getCategoryColor(
+                                template.category
+                              ),
+                            }}
                           >
                             {template.category}
                           </Badge>
                         ) : (
-                          '-'
+                          "-"
                         )}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        {state.moneySources.find((ms) => ms.id === template.moneySourceId)?.name || 'N/A'}
+                        {state.moneySources.find(
+                          (ms) => ms.id === template.moneySourceId
+                        )?.name || "N/A"}
                       </TableCell>
                       <TableCell
                         className={`text-right font-medium ${
-                          template.type === 'income' ? 'text-green-600' : 'text-red-600'
+                          template.type === "income"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
-                        {template.type === 'income' ? '+' : '-'}
+                        {template.type === "income" ? "+" : "-"}
                         {formatCurrency(template.amount)}
                       </TableCell>
                       <TableCell>
@@ -149,7 +168,8 @@ export function TemplatesManagementDialog() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                      No templates yet. Create one to speed up transaction entry.
+                      No templates yet. Create one to speed up transaction
+                      entry.
                     </TableCell>
                   </TableRow>
                 )}

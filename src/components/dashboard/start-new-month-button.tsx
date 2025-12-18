@@ -43,7 +43,11 @@ export function StartNewMonthButton() {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="outline" size="sm" className="whitespace-nowrap flex-shrink-0">
+        <Button
+          variant="outline"
+          size="sm"
+          className="whitespace-nowrap flex-shrink-0"
+        >
           <CalendarPlus className="h-4 w-4 mr-2" />
           New Month
         </Button>
