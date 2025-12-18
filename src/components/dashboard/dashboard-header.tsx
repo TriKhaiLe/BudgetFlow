@@ -7,7 +7,14 @@ import { BudgetMonthSelector } from "./budget-month-selector";
 import { HelpDialog } from "./help-dialog";
 import { TemplatesManagementDialog } from "./templates-management-dialog";
 import { StartNewMonthButton } from "./start-new-month-button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Menu, Wallet } from "lucide-react";
 
 export default function DashboardHeader() {
@@ -26,22 +33,21 @@ export default function DashboardHeader() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="flex flex-col">
-          <div className="sr-only">
-            <h2>Navigation Menu</h2>
-            <p>Access AI Assistant, Data Management, and Help options</p>
-          </div>
-          <nav className="flex flex-col gap-6 text-lg font-medium flex-1">
-            <div className="flex items-center gap-2 text-lg font-semibold text-primary">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2 text-lg font-semibold text-primary">
               <Wallet className="h-6 w-6" />
               <span className="font-bold">BudgetFlow</span>
-            </div>
-            <div className="flex flex-col gap-3 overflow-y-auto flex-1 pr-2">
-              <StartNewMonthButton />
-              <TemplatesManagementDialog />
-              <AIAssistantDialog />
-              <DataManagement />
-              <HelpDialog />
-            </div>
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              Access AI Assistant, Data Management, and Help options
+            </SheetDescription>
+          </SheetHeader>
+          <nav className="flex flex-col gap-3 overflow-y-auto flex-1 pr-2 mt-6">
+            <StartNewMonthButton />
+            <TemplatesManagementDialog />
+            <AIAssistantDialog />
+            <DataManagement />
+            <HelpDialog />
           </nav>
         </SheetContent>
       </Sheet>
