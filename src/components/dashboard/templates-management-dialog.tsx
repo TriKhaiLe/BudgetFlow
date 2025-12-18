@@ -50,9 +50,10 @@ export function TemplatesManagementDialog() {
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Templates</span>
+            <span className="md:hidden">Templates</span>
+            <span className="hidden md:inline">Templates</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="w-full max-w-[90vw] sm:max-w-4xl p-0 flex flex-col max-h-[90vh]">

@@ -25,17 +25,17 @@ export default function DashboardHeader() {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left">
+        <SheetContent side="left" className="flex flex-col">
           <div className="sr-only">
             <h2>Navigation Menu</h2>
             <p>Access AI Assistant, Data Management, and Help options</p>
           </div>
-          <nav className="grid gap-6 text-lg font-medium">
+          <nav className="flex flex-col gap-6 text-lg font-medium flex-1">
             <div className="flex items-center gap-2 text-lg font-semibold text-primary">
               <Wallet className="h-6 w-6" />
               <span className="font-bold">BudgetFlow</span>
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 overflow-y-auto flex-1 pr-2">
               <StartNewMonthButton />
               <TemplatesManagementDialog />
               <AIAssistantDialog />
@@ -46,9 +46,9 @@ export default function DashboardHeader() {
         </SheetContent>
       </Sheet>
 
-      <div className="flex w-full items-center justify-end gap-4">
+      <div className="flex w-full items-center justify-end gap-4 min-w-0">
         <BudgetMonthSelector />
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2 overflow-x-auto scrollbar-hide min-w-0 flex-shrink-0">
           <StartNewMonthButton />
           <TemplatesManagementDialog />
           <AIAssistantDialog />

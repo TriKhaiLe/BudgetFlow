@@ -121,9 +121,10 @@ export function AIAssistantDialog() {
         }
     }}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-1">
+        <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0">
           <Sparkles className="h-4 w-4" />
-          <span className="sr-only sm:not-sr-only">AI Assistant</span>
+          <span className="md:hidden">AI Assistant</span>
+          <span className="hidden md:inline">AI Assistant</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-0 flex flex-col max-h-[90vh]">

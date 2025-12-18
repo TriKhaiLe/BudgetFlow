@@ -203,12 +203,22 @@ export function DataManagement() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={handleImportClick}>
+      <div className="flex gap-2 justify-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleImportClick}
+          className="whitespace-nowrap flex-shrink-0"
+        >
           <Download className="h-4 w-4 mr-2" />
           Import
         </Button>
-        <Button variant="outline" size="sm" onClick={handleExport}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExport}
+          className="whitespace-nowrap flex-shrink-0"
+        >
           <Upload className="h-4 w-4 mr-2" />
           Export
         </Button>

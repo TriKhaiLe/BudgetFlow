@@ -17,9 +17,10 @@ export function HelpDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-9 w-9">
-          <QuestionCircle className="h-5 w-5" />
-          <span className="sr-only">Help</span>
+        <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap flex-shrink-0">
+          <QuestionCircle className="h-4 w-4" />
+          <span className="md:hidden">Help</span>
+          <span className="hidden md:inline sr-only">Help</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="w-full max-w-[90vw] sm:max-w-2xl p-4">
