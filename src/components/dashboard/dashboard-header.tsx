@@ -20,7 +20,7 @@ import { Menu, Wallet } from "lucide-react";
 export default function DashboardHeader() {
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-10">
-      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 flex-shrink-0">
         <Logo />
       </nav>
 
@@ -52,9 +52,9 @@ export default function DashboardHeader() {
         </SheetContent>
       </Sheet>
 
-      <div className="flex w-full items-center justify-end gap-4 min-w-0">
+      <div className="flex flex-1 items-center justify-end gap-4 min-w-0 overflow-hidden">
         <BudgetMonthSelector />
-        <div className="hidden md:flex items-center gap-2 overflow-x-auto scrollbar-hide min-w-0 flex-shrink-0">
+        <div className="hidden md:flex items-center gap-2 overflow-x-auto scrollbar-thin min-w-0 scroll-smooth pb-2">
           <StartNewMonthButton />
           <TemplatesManagementDialog />
           <AIAssistantDialog />
