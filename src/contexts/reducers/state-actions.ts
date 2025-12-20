@@ -68,7 +68,7 @@ export function handleStartNewMonth(state: BudgetState): BudgetState {
     moneySources: state.moneySources.map((ms) => ({
       ...ms,
       budget: ms.balance, // Use current balance as next month's budget
-      spent: 0, // Reset spending
+      spent: 0, // spent = budget - balance = balance - balance = 0
     })),
     transactions: [], // Clear all transactions
     featuredTransactions: [], // Clear featured transactions
@@ -109,7 +109,7 @@ export function handleImportData(
       moneySources: migratedImportedState.moneySources.map((ms) => ({
         ...ms,
         budget: ms.balance,
-        spent: 0,
+        spent: 0, // spent = budget - balance = balance - balance = 0
       })),
       history: [
         createHistoryEntry(
@@ -160,6 +160,14 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   // Ensure monthDescription exists
   if (parsedState.monthDescription === undefined) {
     parsedState.monthDescription = '';
+  }
+
+  // Ensure spent is computed correctly for all money sources
+  if (parsedState.moneySources) {
+    parsedState.moneySources = parsedState.moneySources.map((ms: any) => ({
+      ...ms,
+      spent: ms.budget - ms.balance,
+    }));
   }
 
   // Log warnings if this is a legacy file

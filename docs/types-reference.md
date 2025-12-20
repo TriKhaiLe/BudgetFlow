@@ -11,7 +11,7 @@ Quick reference for TypeScript interfaces and reducer actions.
   id: string; // UUID
   name: string; // e.g., "Wallet", "Bank Account"
   budget: number; // Total budget allocated
-  spent: number; // Amount spent (calculated)
+  spent: number; // COMPUTED: budget - balance (never set directly)
   balance: number; // Current balance
 }
 ```

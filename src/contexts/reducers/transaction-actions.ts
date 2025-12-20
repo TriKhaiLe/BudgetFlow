@@ -26,8 +26,9 @@ export function handleAddTransaction(
 
       const newBalance = affectBalance ? ms.balance + signedAmount : ms.balance;
       const newBudget = ms.budget + signedAmount;
+      const newSpent = newBudget - newBalance;
 
-      return { ...ms, balance: newBalance, budget: newBudget };
+      return { ...ms, balance: newBalance, budget: newBudget, spent: newSpent };
     }),
     history: appendHistory(
       state.history,
@@ -78,6 +79,7 @@ export function handleDeleteTransaction(
             ...ms,
             balance: ms.balance - signedAmount,
             budget: ms.budget - signedAmount,
+            spent: (ms.budget - signedAmount) - (ms.balance - signedAmount),
           }
         : ms
     ),

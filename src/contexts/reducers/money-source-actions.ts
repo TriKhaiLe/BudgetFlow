@@ -12,7 +12,7 @@ export function handleAddMoneySource(
   const newSource: MoneySource = {
     ...payload,
     id: crypto.randomUUID(),
-    spent: 0,
+    spent: payload.budget - payload.balance,
   };
 
   return {

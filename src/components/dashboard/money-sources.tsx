@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useBudget } from '@/contexts/budget-context';
-import type { MoneySource } from '@/lib/types';
-import { formatCurrency, parseFormattedNumber } from '@/lib/utils';
-import { 
-  moneySourceSchema, 
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useBudget } from "@/contexts/budget-context";
+import type { MoneySource } from "@/lib/types";
+import { formatCurrency, parseFormattedNumber } from "@/lib/utils";
+import {
+  moneySourceSchema,
   updateBalanceSchema,
   type MoneySourceFormValues,
-  type UpdateBalanceFormValues 
-} from '@/lib/schemas';
-import { FormattedInput } from '@/components/shared';
-import { Button } from '@/components/ui/button';
+  type UpdateBalanceFormValues,
+} from "@/lib/schemas";
+import { FormattedInput } from "@/components/shared";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -38,13 +38,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { MoreHorizontal, PlusCircle, Trash, Pen } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '../ui/badge';
-import { formatNumberWithCommas } from '@/lib/utils';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { MoreHorizontal, PlusCircle, Trash, Pen } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "../ui/badge";
+import { formatNumberWithCommas } from "@/lib/utils";
 
 function MoneySourceForm({
   source,
@@ -58,25 +63,30 @@ function MoneySourceForm({
   const form = useForm<MoneySourceFormValues>({
     resolver: zodResolver(moneySourceSchema),
     defaultValues: {
-      name: source?.name || '',
-      budget: source ? formatNumberWithCommas(source.budget) : '0',
-      balance: source ? formatNumberWithCommas(source.balance) : '0',
+      name: source?.name || "",
+      budget: source ? formatNumberWithCommas(source.budget) : "0",
+      balance: source ? formatNumberWithCommas(source.balance) : "0",
     },
   });
 
   function onSubmit(values: MoneySourceFormValues) {
     const numericValues = {
-        name: values.name,
-        budget: parseFormattedNumber(values.budget),
-        balance: parseFormattedNumber(values.balance),
-    }
+      name: values.name,
+      budget: parseFormattedNumber(values.budget),
+      balance: parseFormattedNumber(values.balance),
+    };
 
     if (source) {
-      dispatch({ type: 'UPDATE_MONEY_SOURCE', payload: { ...source, ...numericValues } });
-      toast({ title: 'Success', description: 'Money source updated.' });
+      const updatedSource = {
+        ...source,
+        ...numericValues,
+        spent: numericValues.budget - numericValues.balance,
+      };
+      dispatch({ type: "UPDATE_MONEY_SOURCE", payload: updatedSource });
+      toast({ title: "Success", description: "Money source updated." });
     } else {
-      dispatch({ type: 'ADD_MONEY_SOURCE', payload: numericValues });
-      toast({ title: 'Success', description: 'Money source added.' });
+      dispatch({ type: "ADD_MONEY_SOURCE", payload: numericValues });
+      toast({ title: "Success", description: "Money source added." });
     }
     onFinished();
   }
@@ -105,10 +115,7 @@ function MoneySourceForm({
               <FormItem>
                 <FormLabel>Monthly Budget</FormLabel>
                 <FormControl>
-                  <FormattedInput 
-                    field={field} 
-                    placeholder="500" 
-                  />
+                  <FormattedInput field={field} placeholder="500" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,10 +128,7 @@ function MoneySourceForm({
               <FormItem>
                 <FormLabel>Current Balance</FormLabel>
                 <FormControl>
-                  <FormattedInput 
-                    field={field} 
-                    placeholder="1,200"
-                  />
+                  <FormattedInput field={field} placeholder="1,200" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -132,7 +136,9 @@ function MoneySourceForm({
           />
         </div>
         <div className="pt-4">
-          <Button type="submit" className="w-full">{source ? 'Save Changes' : 'Add Source'}</Button>
+          <Button type="submit" className="w-full">
+            {source ? "Save Changes" : "Add Source"}
+          </Button>
         </div>
       </form>
     </Form>
@@ -152,95 +158,130 @@ function AddEditMoneySourceDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="w-full max-w-[90vw] sm:max-w-[425px] p-0 flex flex-col max-h-[90vh]">
         <DialogHeader className="px-4 pt-4">
-          <DialogTitle>{source ? 'Edit' : 'Add'} Money Source</DialogTitle>
+          <DialogTitle>{source ? "Edit" : "Add"} Money Source</DialogTitle>
           <DialogDescription>
-            {source ? 'Update' : 'Create'} a source of funds like a bank account or wallet.
+            {source ? "Update" : "Create"} a source of funds like a bank account
+            or wallet.
           </DialogDescription>
         </DialogHeader>
         <div className="overflow-y-auto px-4 max-h-[calc(90vh-180px)]">
-          <MoneySourceForm source={source} onFinished={() => setIsOpen(false)} />
+          <MoneySourceForm
+            source={source}
+            onFinished={() => setIsOpen(false)}
+          />
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function UpdateBalanceDialog({ source, children }: { source: MoneySource, children: React.ReactNode }) {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const { dispatch } = useBudget();
-    const { toast } = useToast();
+function UpdateBalanceDialog({
+  source,
+  children,
+}: {
+  source: MoneySource;
+  children: React.ReactNode;
+}) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const { dispatch } = useBudget();
+  const { toast } = useToast();
 
-    const form = useForm<UpdateBalanceFormValues>({
-        resolver: zodResolver(updateBalanceSchema),
-        defaultValues: { newBalance: formatNumberWithCommas(source.balance) }
+  const form = useForm<UpdateBalanceFormValues>({
+    resolver: zodResolver(updateBalanceSchema),
+    defaultValues: { newBalance: formatNumberWithCommas(source.balance) },
+  });
+
+  const newBalanceValue = form.watch("newBalance");
+  const parsedNewBalance = parseFormattedNumber(newBalanceValue);
+  const difference = parsedNewBalance - source.balance;
+
+  function onSubmit(values: UpdateBalanceFormValues) {
+    const newBalance = parseFormattedNumber(values.newBalance);
+    dispatch({
+      type: "ADJUST_BALANCE",
+      payload: {
+        moneySourceId: source.id,
+        newBalance,
+      },
     });
-    
-    const newBalanceValue = form.watch('newBalance');
-    const parsedNewBalance = parseFormattedNumber(newBalanceValue);
-    const difference = parsedNewBalance - source.balance;
+    toast({ title: "Success", description: `${source.name} balance updated.` });
+    setIsOpen(false);
+  }
 
-    function onSubmit(values: UpdateBalanceFormValues) {
-        const newBalance = parseFormattedNumber(values.newBalance);
-        dispatch({
-            type: 'ADJUST_BALANCE',
-            payload: {
-                moneySourceId: source.id,
-                newBalance,
-            }
-        });
-        toast({ title: 'Success', description: `${source.name} balance updated.`});
-        setIsOpen(false);
-    }
-    
-    return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                {children}
-            </DialogTrigger>
-            <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-0 flex flex-col max-h-[90vh]">
-                <DialogHeader className="px-4 pt-4">
-                    <DialogTitle>Update Balance for {source.name}</DialogTitle>
-                    <DialogDescription>
-                        Directly set the new balance for this money source. This will be logged in your history.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="overflow-y-auto px-4 max-h-[calc(90vh-180px)]">
-                 <div className="grid grid-cols-2 gap-4 py-4 text-center">
-                    <div>
-                        <p className="text-sm text-muted-foreground">Before</p>
-                        <p className="font-bold text-lg">{formatCurrency(source.balance)}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm text-muted-foreground">After</p>
-                        <p className="font-bold text-lg">{formatCurrency(isNaN(parsedNewBalance) ? source.balance : parsedNewBalance)}</p>
-                    </div>
-                </div>
-                 <div className="py-2 text-center">
-                    <p className="text-sm text-muted-foreground">Difference</p>
-                    <Badge variant={difference === 0 ? "outline" : difference > 0 ? "default" : "destructive"} className="text-lg">
-                      {difference > 0 ? '+' : ''}{formatCurrency(isNaN(difference) ? 0 : difference)}
-                    </Badge>
-                </div>
-                <Form {...form}>
-                    <form id="update-balance-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField control={form.control} name="newBalance" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>New Balance</FormLabel>
-                                <FormControl>
-                                    <FormattedInput field={field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                    </form>
-                </Form>
-                </div>
-                <DialogFooter className="px-4 pb-4 pt-4">
-                    <Button type="submit" form="update-balance-form">Confirm Update</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="w-full max-w-[90vw] sm:max-w-lg p-0 flex flex-col max-h-[90vh]">
+        <DialogHeader className="px-4 pt-4">
+          <DialogTitle>Update Balance for {source.name}</DialogTitle>
+          <DialogDescription>
+            Directly set the new balance for this money source. This will be
+            logged in your history.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="overflow-y-auto px-4 max-h-[calc(90vh-180px)]">
+          <div className="grid grid-cols-2 gap-4 py-4 text-center">
+            <div>
+              <p className="text-sm text-muted-foreground">Before</p>
+              <p className="font-bold text-lg">
+                {formatCurrency(source.balance)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">After</p>
+              <p className="font-bold text-lg">
+                {formatCurrency(
+                  isNaN(parsedNewBalance) ? source.balance : parsedNewBalance
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="py-2 text-center">
+            <p className="text-sm text-muted-foreground">Difference</p>
+            <Badge
+              variant={
+                difference === 0
+                  ? "outline"
+                  : difference > 0
+                  ? "default"
+                  : "destructive"
+              }
+              className="text-lg"
+            >
+              {difference > 0 ? "+" : ""}
+              {formatCurrency(isNaN(difference) ? 0 : difference)}
+            </Badge>
+          </div>
+          <Form {...form}>
+            <form
+              id="update-balance-form"
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4"
+            >
+              <FormField
+                control={form.control}
+                name="newBalance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Balance</FormLabel>
+                    <FormControl>
+                      <FormattedInput field={field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        </div>
+        <DialogFooter className="px-4 pb-4 pt-4">
+          <Button type="submit" form="update-balance-form">
+            Confirm Update
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function AddMoneySourceButton() {
@@ -261,9 +302,16 @@ export default function MoneySources() {
   const { toast } = useToast();
 
   const handleDelete = (source: MoneySource) => {
-    if (confirm(`Are you sure you want to delete ${source.name}? This will remove all associated transactions.`)) {
-      dispatch({ type: 'DELETE_MONEY_SOURCE', payload: source.id });
-      toast({ title: 'Deleted', description: `${source.name} has been deleted.` });
+    if (
+      confirm(
+        `Are you sure you want to delete ${source.name}? This will remove all associated transactions.`
+      )
+    ) {
+      dispatch({ type: "DELETE_MONEY_SOURCE", payload: source.id });
+      toast({
+        title: "Deleted",
+        description: `${source.name} has been deleted.`,
+      });
     }
   };
 
@@ -299,20 +347,30 @@ export default function MoneySources() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <UpdateBalanceDialog source={source}>
-                        <Button variant="outline" size="icon" className="h-8 w-8">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
                           <Pen className="h-4 w-4" />
                           <span className="sr-only">Update Balance</span>
                         </Button>
                       </UpdateBalanceDialog>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <AddEditMoneySourceDialog source={source}>
-                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <DropdownMenuItem
+                              onSelect={(e) => e.preventDefault()}
+                            >
                               <Pen className="mr-2 h-4 w-4" /> Edit Details
                             </DropdownMenuItem>
                           </AddEditMoneySourceDialog>
