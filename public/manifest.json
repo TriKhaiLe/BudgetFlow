@@ -1,7 +1,7 @@
 {
   "name": "BudgetFlow - Smart Budget Tracker",
   "short_name": "BudgetFlow",
-  "description": "Take control of your finances with smart budgeting. Track expenses, manage money sources, and get AI-powered insights.",
+  "description": "Take control of your finances with smart budgeting. Track income and withdrawals, manage money sources, and get AI-powered insights.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

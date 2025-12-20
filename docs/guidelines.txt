@@ -1,4 +1,4 @@
 - Refer to context files in "/docs", consider using just the most related context to avoid overwhelming
 - Update the context files in "/docs" if something changes in refactoring progress
-- If the "Codebase refactoring" is inprogress: Follow refactoring strategy in "/docs/refactoring-strategy.md", log the refactoring summary to /refactoring_history
+- If the "Codebase refactoring" is inprogress: Follow refactoring strategy in "/docs/refactoring-strategy.md" (update it if needed)
 - When you need some important decisions from me (e.g. tech limit for a feature, need an alternative approach), just pause (not stop) the conversation, and give me the options from your suggestions (eg: by choosing to skip or run the terminal command corresponding to your suggested option)

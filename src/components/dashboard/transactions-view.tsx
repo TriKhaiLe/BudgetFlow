@@ -140,7 +140,7 @@ function AddTransactionDialog() {
       payload: {
         description: values.description || "",
         amount: parseFormattedNumber(values.amount),
-        category: values.category || "Withdraw BIDV",
+        category: values.category || "Uncategorized",
         date: values.date.toISOString(),
         type: values.type,
         moneySourceId: values.moneySourceId,
@@ -219,7 +219,7 @@ function AddTransactionDialog() {
               <div>
                 <DialogTitle>Add Transaction</DialogTitle>
                 <DialogDescription>
-                  Log an income or expense that affects your budget.
+                  Log an income or withdrawal that affects your budget.
                 </DialogDescription>
               </div>
               <DropdownMenu
@@ -310,10 +310,10 @@ function AddTransactionDialog() {
                             </FormItem>
                             <FormItem className="flex items-center space-x-2 space-y-0">
                               <FormControl>
-                                <RadioGroupItem value="expense" />
+                                <RadioGroupItem value="withdraw" />
                               </FormControl>
                               <FormLabel className="font-normal">
-                                Expense
+                                Withdraw
                               </FormLabel>
                             </FormItem>
                           </RadioGroup>

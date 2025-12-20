@@ -46,7 +46,7 @@ const aiSchema = z.object({
 type AiSuggestion = {
   category: string;
   amount: number;
-  type: "income" | "expense";
+  type: "income" | "withdraw";
 };
 
 export function AIAssistantDialog() {
@@ -77,7 +77,7 @@ export function AIAssistantDialog() {
         setSuggestion({
           category,
           amount: Math.abs(amount),
-          type: amount >= 0 ? "income" : "expense",
+          type: amount >= 0 ? "income" : "withdraw",
         });
       } else {
         toast({

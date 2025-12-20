@@ -138,7 +138,7 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   if (parsedState.transactions) {
     parsedState.transactions = parsedState.transactions.map((t: any) => ({
       ...t,
-      type: t.type || (t.amount > 0 ? 'income' : 'expense'),
+      type: t.type === 'expense' ? 'withdraw' : (t.type || (t.amount > 0 ? 'income' : 'withdraw')),
       amount: Math.abs(t.amount),
     }));
   }

@@ -26,7 +26,7 @@ Quick reference for TypeScript interfaces and reducer actions.
   category: string; // e.g., "Groceries", "Salary"
   date: string; // ISO date string
   moneySourceId: string; // FK to MoneySource
-  type: "income" | "expense"; // Determines if + or -
+  type: "income" | "withdraw"; // Determines if + or -
 }
 ```
 
@@ -72,7 +72,7 @@ Quick reference for TypeScript interfaces and reducer actions.
   - Auto-generates id
   - If `affectBalance=true`: updates source balance
   - Income: increases budget & balance
-  - Expense: increases spent & decreases balance
+  - Withdraw: decreases budget & decreases balance (if affectBalance is true)
 - `UPDATE_TRANSACTION`: `Transaction`
   - Shallow update; does NOT rebalance! Logs warning in history
 - `DELETE_TRANSACTION`: `Transaction`
@@ -107,7 +107,7 @@ Quick reference for TypeScript interfaces and reducer actions.
       category: "Food",
       date: new Date().toISOString(),
       moneySourceId: "abc-123",
-      type: "expense",
+      type: "withdraw",
       affectBalance: true,
     },
   });

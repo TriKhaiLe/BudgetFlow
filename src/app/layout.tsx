@@ -1,19 +1,20 @@
-import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { cn } from '@/lib/utils';
-import { Toaster } from '@/components/ui/toaster';
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/toaster";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: 'BudgetFlow - Smart Budget Tracker',
-  description: 'Take control of your finances with smart budgeting. Track expenses, manage money sources, and get AI-powered insights.',
-  manifest: '/manifest.json',
+  title: "BudgetFlow - Smart Budget Tracker",
+  description:
+    "Take control of your finances with smart budgeting. Track income and withdrawals, manage money sources, and get AI-powered insights.",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
-    title: 'BudgetFlow',
+    statusBarStyle: "default",
+    title: "BudgetFlow",
   },
   formatDetection: {
     telephone: false,
@@ -21,11 +22,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#2563eb',
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({
@@ -41,7 +42,7 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          'min-h-screen bg-background font-sans antialiased overflow-x-hidden',
+          "min-h-screen bg-background font-sans antialiased overflow-x-hidden",
           inter.variable
         )}
         suppressHydrationWarning

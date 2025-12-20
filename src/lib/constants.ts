@@ -78,7 +78,7 @@ export const STORAGE_KEY = 'budgetFlowState';
 /**
  * Transaction types for the application.
  */
-export const TRANSACTION_TYPES = ['income', 'expense'] as const;
+export const TRANSACTION_TYPES = ['income', 'withdraw'] as const;
 export type TransactionType = typeof TRANSACTION_TYPES[number];
 
 /**

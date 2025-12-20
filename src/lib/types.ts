@@ -13,7 +13,7 @@ export interface Transaction {
   category: string;
   date: string;
   moneySourceId: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'withdraw';
 }
 
 export interface FeaturedTransaction {
@@ -31,7 +31,7 @@ export interface TransactionTemplate {
   amount: number;
   category: string;
   moneySourceId: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'withdraw';
   affectBalance: boolean;
 }
 

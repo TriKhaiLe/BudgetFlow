@@ -48,7 +48,7 @@ const prompt = ai.definePrompt({
   If the user describes "I bought groceries for $100", respond with a string like:
   "groceries:-100"
 
-  Ensure that the amount is prefixed with a "-" if it's an expense, and no prefix if it's an income.
+  Ensure that the amount is prefixed with a "-" if it's a withdrawal/expense, and no prefix if it's an income.
 `,
 });
 

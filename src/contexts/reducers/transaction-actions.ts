@@ -25,10 +25,9 @@ export function handleAddTransaction(
       if (ms.id !== moneySourceId) return ms;
 
       const newBalance = affectBalance ? ms.balance + signedAmount : ms.balance;
-      const newSpent = type === 'expense' ? ms.spent + amount : ms.spent;
-      const newBudget = type === 'income' ? ms.budget + amount : ms.budget;
+      const newBudget = ms.budget + signedAmount;
 
-      return { ...ms, balance: newBalance, spent: newSpent, budget: newBudget };
+      return { ...ms, balance: newBalance, budget: newBudget };
     }),
     history: appendHistory(
       state.history,
@@ -78,8 +77,7 @@ export function handleDeleteTransaction(
         ? {
             ...ms,
             balance: ms.balance - signedAmount,
-            budget: ms.budget - (type === 'income' ? amount : 0),
-            spent: type === 'expense' ? ms.spent - amount : ms.spent,
+            budget: ms.budget - signedAmount,
           }
         : ms
     ),

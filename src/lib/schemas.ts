@@ -58,7 +58,7 @@ export const transactionSchema = z.object({
   amount: positiveAmountSchema,
   category: z.string().optional(),
   moneySourceId: z.string().min(1, 'Please select a money source.'),
-  type: z.enum(['income', 'expense']),
+  type: z.enum(['income', 'withdraw']),
   date: z.date(),
   affectBalance: z.boolean(),
 });
@@ -103,7 +103,7 @@ export const transactionTemplateSchema = z.object({
   amount: positiveAmountSchema,
   category: z.string().optional(),
   moneySourceId: z.string().min(1, 'Please select a money source.'),
-  type: z.enum(['income', 'expense']),
+  type: z.enum(['income', 'withdraw']),
   affectBalance: z.boolean(),
 });
 

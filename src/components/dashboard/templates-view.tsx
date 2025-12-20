@@ -1,18 +1,22 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useBudget } from '@/contexts/budget-context';
-import type { TransactionTemplate } from '@/lib/types';
-import { formatCurrency, parseFormattedNumber, getCategoryColor } from '@/lib/utils';
-import { CATEGORY_SUGGESTIONS } from '@/lib/constants';
-import { 
-  transactionTemplateSchema, 
-  type TransactionTemplateFormValues 
-} from '@/lib/schemas';
-import { FormattedInput } from '@/components/shared';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useBudget } from "@/contexts/budget-context";
+import type { TransactionTemplate } from "@/lib/types";
+import {
+  formatCurrency,
+  parseFormattedNumber,
+  getCategoryColor,
+} from "@/lib/utils";
+import { CATEGORY_SUGGESTIONS } from "@/lib/constants";
+import {
+  transactionTemplateSchema,
+  type TransactionTemplateFormValues,
+} from "@/lib/schemas";
+import { FormattedInput } from "@/components/shared";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -20,7 +24,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -38,22 +42,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { PlusCircle, Trash, Edit, FileText } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '../ui/badge';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { Combobox } from '../ui/combobox';
-import { Switch } from '../ui/switch';
-import { ScrollArea } from '../ui/scroll-area';
+} from "@/components/ui/select";
+import { PlusCircle, Trash, Edit, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "../ui/badge";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Combobox } from "../ui/combobox";
+import { Switch } from "../ui/switch";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface TemplateFormDialogProps {
   isOpen: boolean;
@@ -62,37 +66,40 @@ interface TemplateFormDialogProps {
   onSubmitCallback?: () => void;
 }
 
-export function TemplateFormDialog({ 
-  isOpen, 
-  onOpenChange, 
+export function TemplateFormDialog({
+  isOpen,
+  onOpenChange,
   template = null,
-  onSubmitCallback 
+  onSubmitCallback,
 }: TemplateFormDialogProps) {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
-  
-  const defaultMoneySourceId = state.moneySources.length > 0 ? state.moneySources[0].id : '';
+
+  const defaultMoneySourceId =
+    state.moneySources.length > 0 ? state.moneySources[0].id : "";
   const isEditing = !!template;
 
   const form = useForm<TransactionTemplateFormValues>({
     resolver: zodResolver(transactionTemplateSchema),
-    defaultValues: template ? {
-      name: template.name,
-      description: template.description,
-      amount: template.amount.toString(),
-      category: template.category,
-      moneySourceId: template.moneySourceId,
-      type: template.type,
-      affectBalance: template.affectBalance,
-    } : {
-      name: '',
-      description: '',
-      amount: '',
-      category: '',
-      moneySourceId: defaultMoneySourceId,
-      type: 'expense',
-      affectBalance: true,
-    },
+    defaultValues: template
+      ? {
+          name: template.name,
+          description: template.description,
+          amount: template.amount.toString(),
+          category: template.category,
+          moneySourceId: template.moneySourceId,
+          type: template.type,
+          affectBalance: template.affectBalance,
+        }
+      : {
+          name: "",
+          description: "",
+          amount: "",
+          category: "",
+          moneySourceId: defaultMoneySourceId,
+          type: "withdraw",
+          affectBalance: true,
+        },
   });
 
   React.useEffect(() => {
@@ -109,12 +116,12 @@ export function TemplateFormDialog({
         });
       } else {
         form.reset({
-          name: '',
-          description: '',
-          amount: '',
-          category: '',
+          name: "",
+          description: "",
+          amount: "",
+          category: "",
           moneySourceId: defaultMoneySourceId,
-          type: 'expense',
+          type: "withdraw",
           affectBalance: true,
         });
       }
@@ -124,33 +131,33 @@ export function TemplateFormDialog({
   function onSubmit(values: TransactionTemplateFormValues) {
     if (isEditing && template) {
       dispatch({
-        type: 'UPDATE_TEMPLATE',
+        type: "UPDATE_TEMPLATE",
         payload: {
           id: template.id,
           name: values.name,
-          description: values.description || '',
+          description: values.description || "",
           amount: parseFormattedNumber(values.amount),
-          category: values.category || '',
+          category: values.category || "",
           moneySourceId: values.moneySourceId,
           type: values.type,
           affectBalance: values.affectBalance,
         },
       });
-      toast({ title: 'Success', description: 'Template updated.' });
+      toast({ title: "Success", description: "Template updated." });
     } else {
       dispatch({
-        type: 'ADD_TEMPLATE',
+        type: "ADD_TEMPLATE",
         payload: {
           name: values.name,
-          description: values.description || '',
+          description: values.description || "",
           amount: parseFormattedNumber(values.amount),
-          category: values.category || '',
+          category: values.category || "",
           moneySourceId: values.moneySourceId,
           type: values.type,
           affectBalance: values.affectBalance,
         },
       });
-      toast({ title: 'Success', description: 'Template created.' });
+      toast({ title: "Success", description: "Template created." });
     }
     form.reset();
     onOpenChange(false);
@@ -158,25 +165,36 @@ export function TemplateFormDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        form.reset();
-      }
-      onOpenChange(open);
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          form.reset();
+        }
+        onOpenChange(open);
+      }}
+    >
       <DialogContent className="w-full max-w-[90vw] sm:max-w-xl p-0 flex flex-col max-h-[90vh]">
         <DialogHeader className="px-4 pt-4">
-          <DialogTitle>{isEditing ? 'Edit Template' : 'Create Template'}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit Template" : "Create Template"}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing 
-              ? 'Update your transaction template.' 
-              : 'Create a reusable template for quick transaction entry.'}
+            {isEditing
+              ? "Update your transaction template."
+              : "Create a reusable template for quick transaction entry."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col"
+          >
             <div className="overflow-y-auto px-4 space-y-4 max-h-[calc(90vh-180px)]">
-                <FormField control={form.control} name="name" render={({ field }) => (
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>Template Name *</FormLabel>
                     <FormControl>
@@ -184,47 +202,64 @@ export function TemplateFormDialog({
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )} />
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Transaction Type</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="flex space-x-4"
-                        >
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="income" /></FormControl>
-                            <FormLabel className="font-normal">Income</FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl><RadioGroupItem value="expense" /></FormControl>
-                            <FormLabel className="font-normal">Expense</FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField control={form.control} name="description" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Transaction Type</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Salary or Groceries" {...field} />
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        className="flex space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="income" />
+                          </FormControl>
+                          <FormLabel className="font-normal">Income</FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="withdraw" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Withdraw
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )} />
+                )}
+              />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="amount" render={({ field }) => (
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Salary or Groceries"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Amount</FormLabel>
                       <FormControl>
@@ -232,19 +267,26 @@ export function TemplateFormDialog({
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )} />
+                  )}
+                />
 
-                  <FormField control={form.control} name="moneySourceId" render={({ field }) => (
+                <FormField
+                  control={form.control}
+                  name="moneySourceId"
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Money Source</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a source" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {state.moneySources.map(source => (
+                          {state.moneySources.map((source) => (
                             <SelectItem key={source.id} value={source.id}>
                               {source.name}
                             </SelectItem>
@@ -253,46 +295,52 @@ export function TemplateFormDialog({
                       </Select>
                       <FormMessage />
                     </FormItem>
-                  )} />
-                </div>
+                  )}
+                />
+              </div>
 
-                <FormField control={form.control} name="category" render={({ field }) => (
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Category</FormLabel>
                     <Combobox
                       options={[...CATEGORY_SUGGESTIONS]}
-                      value={field.value || ''}
+                      value={field.value || ""}
                       onChange={field.onChange}
                       placeholder="Select or type..."
                     />
                     <FormMessage />
                   </FormItem>
-                )} />
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="affectBalance"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel>Update Balance</FormLabel>
-                        <FormDescription>
-                          Toggle whether transactions from this template affect the money source balance.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="affectBalance"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Update Balance</FormLabel>
+                      <FormDescription>
+                        Toggle whether transactions from this template affect
+                        the money source balance.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter className="px-4 pb-4 pt-4 border-t">
               <Button type="submit">
-                {isEditing ? 'Update Template' : 'Create Template'}
+                {isEditing ? "Update Template" : "Create Template"}
               </Button>
             </DialogFooter>
           </form>
@@ -307,18 +355,13 @@ function AddTemplateDialog() {
 
   return (
     <>
-      <Button 
-        size="sm" 
-        className="h-8 gap-1"
-        onClick={() => setIsOpen(true)}
-      >
+      <Button size="sm" className="h-8 gap-1" onClick={() => setIsOpen(true)}>
         <PlusCircle className="h-3.5 w-3.5" />
-        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Template</span>
+        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+          Add Template
+        </span>
       </Button>
-      <TemplateFormDialog
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-      />
+      <TemplateFormDialog isOpen={isOpen} onOpenChange={setIsOpen} />
     </>
   );
 }
@@ -330,13 +373,18 @@ export function AddTemplateButton() {
 export default function TemplatesView() {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
-  const [editingTemplate, setEditingTemplate] = React.useState<TransactionTemplate | null>(null);
+  const [editingTemplate, setEditingTemplate] =
+    React.useState<TransactionTemplate | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   const handleDeleteTemplate = (template: TransactionTemplate) => {
-    if (confirm(`Are you sure you want to delete the template "${template.name}"?`)) {
-      dispatch({ type: 'DELETE_TEMPLATE', payload: template.id });
-      toast({ title: 'Deleted', description: 'Template has been deleted.' });
+    if (
+      confirm(
+        `Are you sure you want to delete the template "${template.name}"?`
+      )
+    ) {
+      dispatch({ type: "DELETE_TEMPLATE", payload: template.id });
+      toast({ title: "Deleted", description: "Template has been deleted." });
     }
   };
 
@@ -352,7 +400,9 @@ export default function TemplatesView() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead className="hidden sm:table-cell">Description</TableHead>
+              <TableHead className="hidden sm:table-cell">
+                Description
+              </TableHead>
               <TableHead>Category</TableHead>
               <TableHead className="hidden sm:table-cell">Source</TableHead>
               <TableHead className="text-right">Amount</TableHead>
@@ -372,29 +422,35 @@ export default function TemplatesView() {
                     </div>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">
-                    {template.description || '-'}
+                    {template.description || "-"}
                   </TableCell>
                   <TableCell>
                     {template.category ? (
                       <Badge
                         variant="outline"
-                        style={{ backgroundColor: getCategoryColor(template.category) }}
+                        style={{
+                          backgroundColor: getCategoryColor(template.category),
+                        }}
                       >
                         {template.category}
                       </Badge>
                     ) : (
-                      '-'
+                      "-"
                     )}
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
-                    {state.moneySources.find((ms) => ms.id === template.moneySourceId)?.name || 'N/A'}
+                    {state.moneySources.find(
+                      (ms) => ms.id === template.moneySourceId
+                    )?.name || "N/A"}
                   </TableCell>
                   <TableCell
                     className={`text-right font-medium ${
-                      template.type === 'income' ? 'text-green-600' : 'text-red-600'
+                      template.type === "income"
+                        ? "text-green-600"
+                        : "text-red-600"
                     }`}
                   >
-                    {template.type === 'income' ? '+' : '-'}
+                    {template.type === "income" ? "+" : "-"}
                     {formatCurrency(template.amount)}
                   </TableCell>
                   <TableCell>

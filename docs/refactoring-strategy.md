@@ -59,23 +59,6 @@ src/
 - [ ] Consider splitting large contexts by domain
 - [ ] Use proper action types with discriminated unions
 
-## Current Refactoring Actions (December 2025)
-
-### Completed
-
-1. ✅ Extracted `FormattedInput` to shared components
-2. ✅ Created constants file for category suggestions and history icons
-3. ✅ Split budget reducer into modular action handlers
-4. ✅ Created shared form schemas file
-
-### File Changes Summary
-
-- `src/components/shared/formatted-input.tsx` - New reusable input component
-- `src/lib/constants.ts` - Centralized constants
-- `src/lib/schemas.ts` - Shared Zod schemas
-- `src/contexts/reducers/` - Split reducer actions
-- Updated `transactions-view.tsx`, `money-sources.tsx` to use shared components
-
 ## Best Practices
 
 ### Before Refactoring

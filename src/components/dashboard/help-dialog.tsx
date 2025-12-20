@@ -71,15 +71,14 @@ export function HelpDialog() {
               </h3>
               <p>
                 Transactions are the core of your budget. You can add an{" "}
-                <strong className="text-green-600">Income</strong> or an{" "}
-                <strong className="text-red-600">Expense</strong>.
+                <strong className="text-green-600">Income</strong> or a{" "}
+                <strong className="text-red-600">Withdraw</strong>.
               </p>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>
-                  An <strong className="font-medium">Expense</strong> will
-                  increase your{" "}
-                  <strong className="text-red-600">"Spent"</strong> amount for
-                  the month.
+                  A <strong className="font-medium">Withdraw</strong> will
+                  subtract from your budget, and if "Update Balance" is enabled,
+                  it will also subtract from your current balance.
                 </li>
                 <li>
                   An <strong className="font-medium">Income</strong> will
