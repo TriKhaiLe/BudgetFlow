@@ -59,3 +59,47 @@ Once both servers are running, open your web browser and navigate to:
 [http://localhost:9002](http://localhost:9002)
 
 You should now see the BudgetFlow application running!
+
+
+## Testing
+
+This project uses Jest with React Testing Library for unit and integration testing.
+
+### Running Tests
+
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode (automatically reruns on file changes)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Test Structure
+
+Tests are located alongside the source files in `__tests__` directories:
+- `src/contexts/reducers/__tests__/` - Tests for state management reducers
+- `src/lib/__tests__/` - Tests for utility functions
+
+### Test Files
+
+- **money-source-actions.test.ts** - Tests for money source CRUD operations (add, update, delete, adjust balance)
+- **transaction-actions.test.ts** - Tests for transaction operations (income/expense transactions, featured transactions)
+- **template-actions.test.ts** - Tests for transaction template management
+- **utils.test.ts** - Tests for utility functions (currency formatting, number parsing, color generation)
+
+### Writing New Tests
+
+1. Create test files with `.test.ts` or `.test.tsx` extension
+2. Place them in `__tests__` directory near the code they test
+3. Use descriptive test names with `it('should...')` pattern
+4. Mock external dependencies when needed
+5. Test both success and error cases
+
+### Test Configuration
+
+- **jest.config.js** - Main Jest configuration with Next.js integration
+- **jest.setup.js** - Global test setup (includes jest-dom matchers and crypto mock)
