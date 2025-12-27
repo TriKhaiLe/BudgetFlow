@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { ClearableTextarea } from "@/components/shared";
 import { useBudget } from "@/contexts/budget-context";
 import { useToast } from "@/hooks/use-toast";
 import { aiAssistedBudgetUpdates } from "@/ai/flows/ai-assisted-budget-updates";
@@ -168,7 +168,10 @@ export function AIAssistantDialog() {
                     <FormItem>
                       <FormLabel>Transaction Description</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Type here..." {...field} />
+                        <ClearableTextarea
+                          placeholder="Type here..."
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

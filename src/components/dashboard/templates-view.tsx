@@ -15,7 +15,7 @@ import {
   transactionTemplateSchema,
   type TransactionTemplateFormValues,
 } from "@/lib/schemas";
-import { FormattedInput } from "@/components/shared";
+import { FormattedInput, ClearableInput } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -43,7 +43,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+
 import {
   Select,
   SelectContent,
@@ -198,7 +198,10 @@ export function TemplateFormDialog({
                   <FormItem>
                     <FormLabel>Template Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Monthly Rent" {...field} />
+                      <ClearableInput
+                        placeholder="e.g., Monthly Rent"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -245,7 +248,7 @@ export function TemplateFormDialog({
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input
+                      <ClearableInput
                         placeholder="e.g., Salary or Groceries"
                         {...field}
                       />

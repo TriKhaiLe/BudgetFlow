@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useBudget } from "@/contexts/budget-context";
-import { Textarea } from "@/components/ui/textarea";
+import { ClearableTextarea } from "@/components/shared";
 import { Label } from "@/components/ui/label";
 import { Check } from "lucide-react";
 
@@ -57,11 +57,15 @@ export function MonthDescription() {
           </div>
         )}
       </div>
-      <Textarea
+      <ClearableTextarea
         id="month-description"
         placeholder="Add any notes or reminders for this month..."
         value={localDescription}
         onChange={handleDescriptionChange}
+        onClear={() => {
+          setLocalDescription("");
+          setShowSavedIcon(false);
+        }}
         onBlur={handleBlur}
         className="min-h-[100px] resize-y"
       />

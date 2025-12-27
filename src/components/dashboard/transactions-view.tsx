@@ -17,7 +17,7 @@ import {
   type TransactionFormValues,
   type FeaturedTransactionFormValues,
 } from "@/lib/schemas";
-import { FormattedInput } from "@/components/shared";
+import { FormattedInput, ClearableInput } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -45,7 +45,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+
 import {
   Select,
   SelectContent,
@@ -329,7 +329,7 @@ function AddTransactionDialog() {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Input
+                          <ClearableInput
                             placeholder="e.g., Salary or Groceries"
                             {...field}
                           />
@@ -482,10 +482,11 @@ function AddTransactionDialog() {
                     {saveAsTemplate && (
                       <div>
                         <FormLabel>Template Name *</FormLabel>
-                        <Input
+                        <ClearableInput
                           placeholder="e.g., Monthly Rent Payment"
                           value={templateName}
                           onChange={(e) => setTemplateName(e.target.value)}
+                          onClear={() => setTemplateName("")}
                           className="mt-2"
                         />
                       </div>
@@ -568,7 +569,7 @@ function AddFeaturedTransactionDialog() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input
+                      <ClearableInput
                         placeholder="e.g., Coffee with a friend"
                         {...field}
                       />
@@ -585,7 +586,7 @@ function AddFeaturedTransactionDialog() {
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Social" {...field} />
+                        <ClearableInput placeholder="e.g., Social" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

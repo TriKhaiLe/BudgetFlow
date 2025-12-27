@@ -32,7 +32,10 @@ Use this when booting up the repo to regain context fast.
 
 - **Constants** (`src/lib/constants.ts`): `CATEGORY_SUGGESTIONS`, `HISTORY_ICON_MAP`, `STORAGE_KEY`, `getHistoryIconConfig()`.
 - **Schemas** (`src/lib/schemas.ts`): Zod validation schemas: `moneySourceSchema`, `transactionSchema`, `featuredTransactionSchema`, `transactionTemplateSchema`, `updateBalanceSchema`, `aiAssistantSchema`.
-- **Shared Components** (`src/components/shared/`): `FormattedInput` - reusable number input with comma formatting and quick-add buttons.
+- **Shared Components** (`src/components/shared/`):
+  - `FormattedInput` - reusable number input with comma formatting, quick-add buttons, and clear button.
+  - `ClearableInput` - text input wrapper with quick-delete (X) button that appears when input has value. Used for description/name fields.
+  - `ClearableTextarea` - textarea wrapper with quick-delete (X) button. Used for notes and AI description fields.
 
 ## Transaction Templates (Added Dec 2025)
 
@@ -66,7 +69,8 @@ Use this when booting up the repo to regain context fast.
 
 ## Testing/Quality Notes
 
-- No automated tests present. Rely on `npm run lint` and `npm run typecheck`.
+- Tests available via `npm run test`. Component tests in `__tests__` folders, coverage via `npm run test:coverage`.
+- Also rely on `npm run lint` and `npm run typecheck` for static analysis.
 - Be cautious editing reducer math and import/export transformations; they drive persistence and history logging.
 - Transaction update/delete logic is simplified; altering amounts/types may need full rebalance if correctness matters.
 

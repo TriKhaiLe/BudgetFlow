@@ -1,5 +1,10 @@
 - Refer to context files in "/docs", consider using just the most related context to avoid overwhelming
 - Update the context files in "/docs" if something changes in refactoring progress
+
 - Update code should also update related tests
+- If some tests keep failing, please summaize for me the reasons so that I can give a new approach to fix
+
 - If the "Codebase refactoring" is inprogress: Follow refactoring strategy in "/docs/refactoring-strategy.md" (update it if needed)
+- No need to log refactoring history to a new file, just keep the current documents with latest updates
+
 - When you need some important decisions from me (e.g. tech limit for a feature, need an alternative approach), just pause (not stop) the conversation, and give me the options from your suggestions (eg: by choosing to skip or run the terminal command corresponding to your suggested option)

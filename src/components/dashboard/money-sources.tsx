@@ -12,7 +12,7 @@ import {
   type MoneySourceFormValues,
   type UpdateBalanceFormValues,
 } from "@/lib/schemas";
-import { FormattedInput } from "@/components/shared";
+import { FormattedInput, ClearableInput } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -39,7 +39,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+
 import { MoreHorizontal, PlusCircle, Trash, Pen } from "lucide-react";
 import {
   DropdownMenu,
@@ -101,7 +101,7 @@ function MoneySourceForm({
             <FormItem>
               <FormLabel>Source Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Wallet" {...field} />
+                <ClearableInput placeholder="e.g., Wallet" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

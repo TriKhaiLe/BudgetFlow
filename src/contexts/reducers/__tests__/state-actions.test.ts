@@ -185,7 +185,7 @@ describe('State Actions', () => {
           category: 'Shopping',
           date: '2025-11-15',
           moneySourceId: 'imported-1',
-          type: 'expense',
+          type: 'withdraw',
         },
       ],
       featuredTransactions: [],
