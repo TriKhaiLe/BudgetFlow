@@ -54,7 +54,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash, History, CalendarIcon, X } from "lucide-react";
+import {
+  PlusCircle,
+  Trash,
+  History,
+  CalendarIcon,
+  X,
+  Info,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "../ui/badge";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
@@ -679,6 +686,7 @@ export default function TransactionsView() {
                 <TableHead>Category</TableHead>
                 <TableHead>Source</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead className="text-center">Update Balance</TableHead>
                 <TableHead className="text-right">Amount</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -710,6 +718,15 @@ export default function TransactionsView() {
                     <TableCell>
                       {new Date(t.date).toLocaleDateString()}
                     </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant={
+                          t.affectBalance !== false ? "default" : "secondary"
+                        }
+                      >
+                        {t.affectBalance !== false ? "Yes" : "No"}
+                      </Badge>
+                    </TableCell>
                     <TableCell
                       className={`text-right font-medium ${
                         t.type === "income" ? "text-green-600" : "text-red-600"
@@ -719,7 +736,58 @@ export default function TransactionsView() {
                       {formatCurrency(t.amount)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-1">
+                        {t.snapshot && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <Info className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">
+                                  Transaction Snapshot
+                                </h4>
+                                <div className="text-sm space-y-1">
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">
+                                      Budget Before:
+                                    </span>
+                                    <span>
+                                      {formatCurrency(t.snapshot.budgetBefore)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">
+                                      Budget After:
+                                    </span>
+                                    <span>
+                                      {formatCurrency(t.snapshot.budgetAfter)}
+                                    </span>
+                                  </div>
+                                  <div className="border-t my-1" />
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">
+                                      Balance Before:
+                                    </span>
+                                    <span>
+                                      {formatCurrency(t.snapshot.balanceBefore)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-muted-foreground">
+                                      Balance After:
+                                    </span>
+                                    <span>
+                                      {formatCurrency(t.snapshot.balanceAfter)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -733,7 +801,7 @@ export default function TransactionsView() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No transactions yet.
                   </TableCell>
                 </TableRow>

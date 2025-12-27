@@ -1,22 +1,43 @@
-import type { BudgetState, Transaction, FeaturedTransaction } from '@/lib/types';
+import type { BudgetState, Transaction, FeaturedTransaction, TransactionSnapshot } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import { appendHistory } from './history-helpers';
 
 /**
  * Handles adding a new transaction to the state.
  * Updates the associated money source balance, budget, and spent amounts.
+ * Stores affectBalance and before/after snapshots for tracking.
  */
 export function handleAddTransaction(
   state: BudgetState,
-  payload: Omit<Transaction, 'id'> & { affectBalance: boolean }
+  payload: Omit<Transaction, 'id' | 'snapshot'> & { affectBalance: boolean }
 ): BudgetState {
   const { affectBalance, ...transactionPayload } = payload;
+  const { amount, moneySourceId, type } = transactionPayload;
+  const signedAmount = type === 'income' ? amount : -amount;
+
+  // Find the money source to get before values
+  const moneySource = state.moneySources.find((ms) => ms.id === moneySourceId);
+  const budgetBefore = moneySource?.budget ?? 0;
+  const balanceBefore = moneySource?.balance ?? 0;
+
+  // Calculate after values
+  const balanceAfter = affectBalance ? balanceBefore + signedAmount : balanceBefore;
+  const budgetAfter = budgetBefore + signedAmount;
+
+  // Create snapshot
+  const snapshot: TransactionSnapshot = {
+    budgetBefore,
+    budgetAfter,
+    balanceBefore,
+    balanceAfter,
+  };
+
   const newTransaction: Transaction = {
     ...transactionPayload,
     id: crypto.randomUUID(),
+    affectBalance,
+    snapshot,
   };
-  const { amount, moneySourceId, type } = newTransaction;
-  const signedAmount = type === 'income' ? amount : -amount;
 
   return {
     ...state,

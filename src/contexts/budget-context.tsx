@@ -44,7 +44,9 @@ type Action =
   | { type: "DELETE_MONEY_SOURCE"; payload: string }
   | {
       type: "ADD_TRANSACTION";
-      payload: Omit<Transaction, "id"> & { affectBalance: boolean };
+      payload: Omit<Transaction, "id" | "snapshot"> & {
+        affectBalance: boolean;
+      };
     }
   | { type: "UPDATE_TRANSACTION"; payload: Transaction }
   | { type: "DELETE_TRANSACTION"; payload: Transaction }

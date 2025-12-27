@@ -6,6 +6,16 @@ export interface MoneySource {
   balance: number;
 }
 
+/**
+ * Snapshot of budget and balance before and after a transaction.
+ */
+export interface TransactionSnapshot {
+  budgetBefore: number;
+  budgetAfter: number;
+  balanceBefore: number;
+  balanceAfter: number;
+}
+
 export interface Transaction {
   id: string;
   description: string;
@@ -14,6 +24,10 @@ export interface Transaction {
   date: string;
   moneySourceId: string;
   type: 'income' | 'withdraw';
+  /** Whether this transaction affected the balance (optional for backward compatibility) */
+  affectBalance?: boolean;
+  /** Snapshot of budget/balance before and after (optional for backward compatibility) */
+  snapshot?: TransactionSnapshot;
 }
 
 export interface FeaturedTransaction {

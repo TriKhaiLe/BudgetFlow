@@ -27,6 +27,19 @@ Quick reference for TypeScript interfaces and reducer actions.
   date: string; // ISO date string
   moneySourceId: string; // FK to MoneySource
   type: "income" | "withdraw"; // Determines if + or -
+  affectBalance?: boolean; // Whether this transaction affected balance (optional for backward compatibility)
+  snapshot?: TransactionSnapshot; // Budget/balance before and after (optional for backward compatibility)
+}
+```
+
+### TransactionSnapshot
+
+```typescript
+{
+  budgetBefore: number; // Budget before the transaction
+  budgetAfter: number; // Budget after the transaction
+  balanceBefore: number; // Balance before the transaction
+  balanceAfter: number; // Balance after the transaction
 }
 ```
 
