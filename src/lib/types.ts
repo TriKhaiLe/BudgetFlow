@@ -4,6 +4,7 @@ export interface MoneySource {
   budget: number;
   spent: number;
   balance: number;
+  lastBalanceUpdate?: string;
 }
 
 /**

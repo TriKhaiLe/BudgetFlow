@@ -325,6 +325,7 @@ export default function MoneySources() {
               <TableHead className="text-right">Budget</TableHead>
               <TableHead className="text-right">Spent</TableHead>
               <TableHead className="text-right">Balance</TableHead>
+              <TableHead className="text-right">Last Update</TableHead>
               <TableHead className="text-right">
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -341,8 +342,21 @@ export default function MoneySources() {
                   <TableCell className="text-right text-red-500">
                     {formatCurrency(source.spent)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right text-primary">
                     {formatCurrency(source.balance)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {source.lastBalanceUpdate
+                      ? new Date(source.lastBalanceUpdate).toLocaleString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
+                      : "—"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -388,7 +402,7 @@ export default function MoneySources() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No money sources yet.
                 </TableCell>
               </TableRow>

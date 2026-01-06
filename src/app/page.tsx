@@ -27,7 +27,13 @@ export default function Home() {
             <TransactionsView />
           </CollapsibleCard>
 
-          <Analytics />
+          <CollapsibleCard
+            storageKey="money-sources-collapsed"
+            title="Money Sources"
+            action={<AddMoneySourceButton />}
+          >
+            <MoneySources />
+          </CollapsibleCard>
 
           <CollapsibleCard
             storageKey="budget-summary-collapsed"
@@ -36,13 +42,7 @@ export default function Home() {
             <BudgetSummary />
           </CollapsibleCard>
 
-          <CollapsibleCard
-            storageKey="money-sources-collapsed"
-            title="Money Sources"
-            action={<AddMoneySourceButton />}
-          >
-            <MoneySources />
-          </CollapsibleCard>
+          <Analytics />
 
           <CollapsibleCard
             storageKey="month-description-collapsed"

@@ -77,7 +77,7 @@ export function handleAdjustBalance(
     ...state,
     moneySources: state.moneySources.map((ms) =>
       ms.id === moneySourceId
-        ? { ...ms, balance: newBalance, spent: ms.budget - newBalance }
+        ? { ...ms, balance: newBalance, spent: ms.budget - newBalance, lastBalanceUpdate: new Date().toISOString() }
         : ms
     ),
     history: appendHistory(

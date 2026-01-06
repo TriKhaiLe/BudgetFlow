@@ -69,6 +69,7 @@ export function handleStartNewMonth(state: BudgetState): BudgetState {
       ...ms,
       budget: ms.balance, // Use current balance as next month's budget
       spent: 0, // spent = budget - balance = balance - balance = 0
+      lastBalanceUpdate: undefined, // Clear timestamp for new month
     })),
     transactions: [], // Clear all transactions
     featuredTransactions: [], // Clear featured transactions
@@ -110,6 +111,7 @@ export function handleImportData(
         ...ms,
         budget: ms.balance,
         spent: 0, // spent = budget - balance = balance - balance = 0
+        lastBalanceUpdate: undefined, // Clear timestamp for fresh start
       })),
       history: [
         createHistoryEntry(
