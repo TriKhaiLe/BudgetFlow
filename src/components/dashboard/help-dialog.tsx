@@ -67,7 +67,7 @@ export function HelpDialog() {
 
             <section>
               <h3 className="font-semibold text-primary mb-2">
-                2. Transactions
+                2. Budget Transactions
               </h3>
               <p>
                 Transactions are the core of your budget. You can add an{" "}

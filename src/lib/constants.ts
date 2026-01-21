@@ -14,6 +14,7 @@ import {
  * Used in combobox/select components for category selection.
  */
 export const CATEGORY_SUGGESTIONS = [
+  { value: 'transfer', label: 'Transfer' },
   { value: 'food', label: 'Food & Groceries' },
   { value: 'transport', label: 'Transport' },
   { value: 'housing', label: 'Housing' },

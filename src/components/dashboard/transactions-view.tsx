@@ -102,17 +102,28 @@ function AddTransactionDialog() {
       amount: "",
       category: "",
       moneySourceId: defaultMoneySourceId,
+      targetMoneySourceId: "",
       type: "income",
       date: new Date(),
       affectBalance: true,
     },
   });
 
+  // Watch the type field to auto-select category for transfers
+  const watchedType = form.watch("type");
+
   React.useEffect(() => {
     if (state.moneySources.length > 0 && !form.getValues("moneySourceId")) {
       form.setValue("moneySourceId", state.moneySources[0].id);
     }
   }, [state.moneySources, form]);
+
+  // Auto-select 'transfer' category when type changes to transfer
+  React.useEffect(() => {
+    if (watchedType === "transfer") {
+      form.setValue("category", "transfer");
+    }
+  }, [watchedType, form]);
 
   const applyTemplate = (template: TransactionTemplate) => {
     form.setValue("description", template.description);
@@ -136,6 +147,16 @@ function AddTransactionDialog() {
       });
     }
 
+    // Handle target money source for transfer templates
+    if (template.type === "transfer" && template.targetMoneySourceId) {
+      const targetExists = state.moneySources.some(
+        (ms) => ms.id === template.targetMoneySourceId
+      );
+      if (targetExists) {
+        form.setValue("targetMoneySourceId", template.targetMoneySourceId);
+      }
+    }
+
     // Close the dropdown menu
     setIsTemplateMenuOpen(false);
   };
@@ -151,6 +172,8 @@ function AddTransactionDialog() {
         date: values.date.toISOString(),
         type: values.type,
         moneySourceId: values.moneySourceId,
+        targetMoneySourceId:
+          values.type === "transfer" ? values.targetMoneySourceId : undefined,
         affectBalance: values.affectBalance,
       },
     });
@@ -165,6 +188,8 @@ function AddTransactionDialog() {
           amount: parseFormattedNumber(values.amount),
           category: values.category || "",
           moneySourceId: values.moneySourceId,
+          targetMoneySourceId:
+            values.type === "transfer" ? values.targetMoneySourceId : undefined,
           type: values.type,
           affectBalance: values.affectBalance,
         },
@@ -182,6 +207,7 @@ function AddTransactionDialog() {
       amount: "",
       category: "",
       moneySourceId: defaultMoneySourceId,
+      targetMoneySourceId: "",
       type: "income",
       date: new Date(),
       affectBalance: true,
@@ -202,6 +228,7 @@ function AddTransactionDialog() {
               amount: "",
               category: "",
               moneySourceId: defaultMoneySourceId,
+              targetMoneySourceId: "",
               type: "income",
               date: new Date(),
               affectBalance: true,
@@ -256,7 +283,11 @@ function AddTransactionDialog() {
                           <div className="flex flex-col">
                             <span className="font-medium">{template.name}</span>
                             <span className="text-xs text-muted-foreground">
-                              {template.type === "income" ? "+" : "-"}
+                              {template.type === "income"
+                                ? "+"
+                                : template.type === "transfer"
+                                  ? "↔"
+                                  : "-"}
                               {formatCurrency(template.amount)}
                             </span>
                           </div>
@@ -305,7 +336,7 @@ function AddTransactionDialog() {
                           <RadioGroup
                             onValueChange={field.onChange}
                             value={field.value}
-                            className="flex space-x-4"
+                            className="flex flex-wrap gap-4"
                           >
                             <FormItem className="flex items-center space-x-2 space-y-0">
                               <FormControl>
@@ -321,6 +352,14 @@ function AddTransactionDialog() {
                               </FormControl>
                               <FormLabel className="font-normal">
                                 Withdraw
+                              </FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value="transfer" />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                Transfer
                               </FormLabel>
                             </FormItem>
                           </RadioGroup>
@@ -364,7 +403,11 @@ function AddTransactionDialog() {
                       name="moneySourceId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Money Source</FormLabel>
+                          <FormLabel>
+                            {watchedType === "transfer"
+                              ? "From (Source)"
+                              : "Money Source"}
+                          </FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
@@ -387,6 +430,41 @@ function AddTransactionDialog() {
                       )}
                     />
                   </div>
+                  {watchedType === "transfer" && (
+                    <FormField
+                      control={form.control}
+                      name="targetMoneySourceId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>To (Target)</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select target source" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {state.moneySources
+                                .filter(
+                                  (source) =>
+                                    source.id !==
+                                    form.getValues("moneySourceId")
+                                )
+                                .map((source) => (
+                                  <SelectItem key={source.id} value={source.id}>
+                                    {source.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -711,9 +789,21 @@ export default function TransactionsView() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {state.moneySources.find(
-                        (ms) => ms.id === t.moneySourceId
-                      )?.name || "N/A"}
+                      {t.type === "transfer" && t.targetMoneySourceId ? (
+                        <span className="text-sm">
+                          {state.moneySources.find(
+                            (ms) => ms.id === t.moneySourceId
+                          )?.name || "N/A"}{" "}
+                          →{" "}
+                          {state.moneySources.find(
+                            (ms) => ms.id === t.targetMoneySourceId
+                          )?.name || "N/A"}
+                        </span>
+                      ) : (
+                        state.moneySources.find(
+                          (ms) => ms.id === t.moneySourceId
+                        )?.name || "N/A"
+                      )}
                     </TableCell>
                     <TableCell>
                       {new Date(t.date).toLocaleDateString()}
@@ -729,10 +819,18 @@ export default function TransactionsView() {
                     </TableCell>
                     <TableCell
                       className={`text-right font-medium ${
-                        t.type === "income" ? "text-green-600" : "text-red-600"
+                        t.type === "income"
+                          ? "text-green-600"
+                          : t.type === "transfer"
+                            ? "text-blue-600"
+                            : "text-red-600"
                       }`}
                     >
-                      {t.type === "income" ? "+" : "-"}
+                      {t.type === "income"
+                        ? "+"
+                        : t.type === "withdraw"
+                          ? "-"
+                          : "↔"}
                       {formatCurrency(t.amount)}
                     </TableCell>
                     <TableCell>

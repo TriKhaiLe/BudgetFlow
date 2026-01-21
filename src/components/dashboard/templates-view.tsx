@@ -88,6 +88,7 @@ export function TemplateFormDialog({
           amount: template.amount.toString(),
           category: template.category,
           moneySourceId: template.moneySourceId,
+          targetMoneySourceId: template.targetMoneySourceId || "",
           type: template.type,
           affectBalance: template.affectBalance,
         }
@@ -97,10 +98,14 @@ export function TemplateFormDialog({
           amount: "",
           category: "",
           moneySourceId: defaultMoneySourceId,
+          targetMoneySourceId: "",
           type: "withdraw",
           affectBalance: true,
         },
   });
+
+  // Watch the type field to auto-select category for transfers
+  const watchedType = form.watch("type");
 
   React.useEffect(() => {
     if (isOpen) {
@@ -111,6 +116,7 @@ export function TemplateFormDialog({
           amount: template.amount.toString(),
           category: template.category,
           moneySourceId: template.moneySourceId,
+          targetMoneySourceId: template.targetMoneySourceId || "",
           type: template.type,
           affectBalance: template.affectBalance,
         });
@@ -121,12 +127,20 @@ export function TemplateFormDialog({
           amount: "",
           category: "",
           moneySourceId: defaultMoneySourceId,
+          targetMoneySourceId: "",
           type: "withdraw",
           affectBalance: true,
         });
       }
     }
   }, [isOpen, template, form, defaultMoneySourceId]);
+
+  // Auto-select 'transfer' category when type changes to transfer
+  React.useEffect(() => {
+    if (watchedType === "transfer") {
+      form.setValue("category", "transfer");
+    }
+  }, [watchedType, form]);
 
   function onSubmit(values: TransactionTemplateFormValues) {
     if (isEditing && template) {
@@ -139,6 +153,8 @@ export function TemplateFormDialog({
           amount: parseFormattedNumber(values.amount),
           category: values.category || "",
           moneySourceId: values.moneySourceId,
+          targetMoneySourceId:
+            values.type === "transfer" ? values.targetMoneySourceId : undefined,
           type: values.type,
           affectBalance: values.affectBalance,
         },
@@ -153,6 +169,8 @@ export function TemplateFormDialog({
           amount: parseFormattedNumber(values.amount),
           category: values.category || "",
           moneySourceId: values.moneySourceId,
+          targetMoneySourceId:
+            values.type === "transfer" ? values.targetMoneySourceId : undefined,
           type: values.type,
           affectBalance: values.affectBalance,
         },
@@ -218,7 +236,7 @@ export function TemplateFormDialog({
                       <RadioGroup
                         onValueChange={field.onChange}
                         value={field.value}
-                        className="flex space-x-4"
+                        className="flex flex-wrap gap-4"
                       >
                         <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
@@ -232,6 +250,14 @@ export function TemplateFormDialog({
                           </FormControl>
                           <FormLabel className="font-normal">
                             Withdraw
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="transfer" />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Transfer
                           </FormLabel>
                         </FormItem>
                       </RadioGroup>
@@ -278,7 +304,11 @@ export function TemplateFormDialog({
                   name="moneySourceId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Money Source</FormLabel>
+                      <FormLabel>
+                        {watchedType === "transfer"
+                          ? "From (Source)"
+                          : "Money Source"}
+                      </FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
@@ -301,6 +331,41 @@ export function TemplateFormDialog({
                   )}
                 />
               </div>
+
+              {watchedType === "transfer" && (
+                <FormField
+                  control={form.control}
+                  name="targetMoneySourceId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>To (Target)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select target source" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {state.moneySources
+                            .filter(
+                              (source) =>
+                                source.id !== form.getValues("moneySourceId")
+                            )
+                            .map((source) => (
+                              <SelectItem key={source.id} value={source.id}>
+                                {source.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

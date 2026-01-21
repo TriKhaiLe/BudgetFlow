@@ -24,7 +24,9 @@ export interface Transaction {
   category: string;
   date: string;
   moneySourceId: string;
-  type: 'income' | 'withdraw';
+  type: 'income' | 'withdraw' | 'transfer';
+  /** Target money source ID for transfer transactions */
+  targetMoneySourceId?: string;
   /** Whether this transaction affected the balance (optional for backward compatibility) */
   affectBalance?: boolean;
   /** Snapshot of budget/balance before and after (optional for backward compatibility) */
@@ -46,7 +48,9 @@ export interface TransactionTemplate {
   amount: number;
   category: string;
   moneySourceId: string;
-  type: 'income' | 'withdraw';
+  type: 'income' | 'withdraw' | 'transfer';
+  /** Target money source ID for transfer transactions */
+  targetMoneySourceId?: string;
   affectBalance: boolean;
 }
 
