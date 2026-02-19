@@ -12,6 +12,7 @@ export const initialBudgetState: BudgetState = {
   featuredTransactions: [],
   transactionTemplates: [],
   history: [],
+  budgetLog: [],
   currentMonth: startOfMonth(new Date()).toISOString(),
   monthDescription: '',
 };
@@ -73,6 +74,13 @@ export function handleStartNewMonth(state: BudgetState): BudgetState {
     })),
     transactions: [], // Clear all transactions
     featuredTransactions: [], // Clear featured transactions
+    budgetLog: state.moneySources.length > 0 ? [{
+      id: crypto.randomUUID(),
+      description: 'Last month balance',
+      changes: Object.fromEntries(state.moneySources.map(ms => [ms.id, ms.balance])),
+      isInitial: true,
+      createdAt: new Date().toISOString(),
+    }] : [], // Auto-create initial budget log entry from previous balances
     monthDescription: '', // Clear month description for the new month
     history: [createHistoryEntry(historyMessage)], // Start fresh history with current balances logged
   };
@@ -162,6 +170,12 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   // Ensure monthDescription exists
   if (parsedState.monthDescription === undefined) {
     parsedState.monthDescription = '';
+  }
+
+  // Ensure budgetLog exists
+  if (!parsedState.budgetLog) {
+    (parsedState as any).budgetLog = [];
+    warnings.push('Missing budgetLog');
   }
 
   // Ensure spent is computed correctly for all money sources

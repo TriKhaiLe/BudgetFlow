@@ -52,6 +52,7 @@ describe('State Actions', () => {
       ],
       transactionTemplates: [],
       history: [],
+      budgetLog: [],
       currentMonth: '2025-12-01T00:00:00.000Z',
       monthDescription: 'December budget',
     };
@@ -64,6 +65,7 @@ describe('State Actions', () => {
       expect(initialBudgetState.featuredTransactions).toEqual([]);
       expect(initialBudgetState.transactionTemplates).toEqual([]);
       expect(initialBudgetState.history).toEqual([]);
+      expect(initialBudgetState.budgetLog).toEqual([]);
       expect(initialBudgetState.monthDescription).toBe('');
       expect(initialBudgetState.currentMonth).toBeTruthy();
     });
@@ -140,6 +142,16 @@ describe('State Actions', () => {
       expect(result.featuredTransactions).toEqual([]);
     });
 
+    it('should create initial budget log entry from previous balances', () => {
+      const result = handleStartNewMonth(initialState);
+
+      expect(result.budgetLog).toHaveLength(1);
+      expect(result.budgetLog[0].isInitial).toBe(true);
+      expect(result.budgetLog[0].description).toBe('Last month balance');
+      expect(result.budgetLog[0].changes['source-1']).toBe(4000); // Previous balance
+      expect(result.budgetLog[0].changes['source-2']).toBe(1500); // Previous balance
+    });
+
     it('should clear month description', () => {
       const result = handleStartNewMonth(initialState);
 
@@ -191,6 +203,7 @@ describe('State Actions', () => {
       featuredTransactions: [],
       transactionTemplates: [],
       history: [],
+      budgetLog: [],
       currentMonth: '2025-11-01T00:00:00.000Z',
     };
 
@@ -314,6 +327,17 @@ describe('State Actions', () => {
       const result = migrateState(legacyState);
 
       expect(result.monthDescription).toBe('');
+    });
+
+    it('should add missing budgetLog', () => {
+      const legacyState = {
+        ...initialState,
+        budgetLog: undefined as any,
+      };
+
+      const result = migrateState(legacyState);
+
+      expect(result.budgetLog).toEqual([]);
     });
 
     it('should remove metadata', () => {

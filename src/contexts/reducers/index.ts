@@ -18,6 +18,12 @@ export {
   handleDeleteTemplate,
 } from './template-actions';
 export {
+  handleInitializeBudgetLog,
+  handleAddBudgetLogEntry,
+  handleDeleteBudgetLogEntry,
+  handleUpdateBudgetLogEntry,
+} from './budget-log-actions';
+export {
   initialBudgetState,
   handleSetCurrentMonth,
   handleImportData,

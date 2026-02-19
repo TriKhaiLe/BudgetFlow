@@ -21,12 +21,12 @@ Use this when booting up the repo to regain context fast.
 
 ## State Model (src/contexts/budget-context.tsx)
 
-- `BudgetState`: `moneySources`, `transactions`, `featuredTransactions`, `transactionTemplates`, `history`, `currentMonth` (ISO, startOfMonth default).
-- Actions include `ADD/UPDATE/DELETE_MONEY_SOURCE`, `ADD/UPDATE/DELETE_TRANSACTION`, `ADD/DELETE_FEATURED_TRANSACTION`, `ADD/UPDATE/DELETE_TEMPLATE`, `ADJUST_BALANCE`, `SET_CURRENT_MONTH`, `IMPORT_DATA` strategies, `SET_INITIAL_STATE`.
+- `BudgetState`: `moneySources`, `transactions`, `featuredTransactions`, `transactionTemplates`, `history`, `budgetLog`, `currentMonth` (ISO, startOfMonth default).
+- Actions include `ADD/UPDATE/DELETE_MONEY_SOURCE`, `ADD/UPDATE/DELETE_TRANSACTION`, `ADD/DELETE_FEATURED_TRANSACTION`, `ADD/UPDATE/DELETE_TEMPLATE`, `INITIALIZE_BUDGET_LOG`, `ADD/DELETE/UPDATE_BUDGET_LOG_ENTRY`, `ADJUST_BALANCE`, `SET_CURRENT_MONTH`, `IMPORT_DATA` strategies, `SET_INITIAL_STATE`.
 - Transactions: income adds to budget and optionally to balance; withdraw subtracts from budget and optionally from balance; spent is always computed as budget - balance; delete reverses the transaction assuming it affected balance; update is shallow (does not rebalance) and logs a warning.
 - Templates: reusable transaction presets with `useCurrentDate` flag to auto-fill today's date when applied.
 - Migrations: on load, backfills `currentMonth`, coerces transaction types, ensures arrays exist (including `transactionTemplates`).
-- **Reducer Architecture (Refactored Dec 2025)**: Action handlers split into `src/contexts/reducers/` with separate files for money sources, transactions, templates, state, and history helpers.
+- **Reducer Architecture (Refactored Dec 2025)**: Action handlers split into `src/contexts/reducers/` with separate files for money sources, transactions, templates, budget log, state, and history helpers.
 
 ## Shared Code (Refactored Dec 2025)
 
@@ -49,6 +49,19 @@ Use this when booting up the repo to regain context fast.
 - **State**: Templates stored in `state.transactionTemplates`, persisted to localStorage.
 - **Reducer**: `template-actions.ts` handles `ADD_TEMPLATE`, `UPDATE_TEMPLATE`, `DELETE_TEMPLATE`.
 
+## Budget Log (Added Feb 2026)
+
+- **Purpose**: A vertical spreadsheet-like view that tracks how budget values change over time. Columns = money sources, rows = budget change entries.
+- **Data Model**: `BudgetLogEntry { id, description, changes: Record<moneySourceId, amount>, isInitial, createdAt }`. Stored in `state.budgetLog`.
+- **Flow**:
+  1. User clicks "Start Budget Tracking" to capture current budgets as the initial entry
+  2. Click "+" to add new entries with deltas per money source (positive = increase, negative = decrease)
+  3. Each entry updates actual money source budgets. Running totals are computed in the view.
+  4. When `handleStartNewMonth` runs, it auto-creates an initial entry with "Last month balance" from previous balances.
+- **Components**: `src/components/dashboard/budget-log-view.tsx` contains `BudgetLogView`, `AddBudgetLogEntryButton`.
+- **Reducer**: `budget-log-actions.ts` handles `INITIALIZE_BUDGET_LOG`, `ADD/DELETE/UPDATE_BUDGET_LOG_ENTRY`.
+- **Migration**: `migrateState` ensures `budgetLog: []` exists for backward compatibility.
+
 ## AI Flows (src/ai)
 
 - Config (`genkit.ts`): `googleai/gemini-2.5-flash` with Google plugin.
@@ -58,7 +71,7 @@ Use this when booting up the repo to regain context fast.
 
 ## UI Landmarks
 
-- `src/app/page.tsx`: wraps dashboard in `BudgetProvider`; sections: Budget Summary, Analytics, Transactions, Money Sources. Add buttons for Transactions and Money Sources are in the CollapsibleCard headers.
+- `src/app/page.tsx`: wraps dashboard in `BudgetProvider`; sections: Budget Log, Budget Transactions, Money Sources, Budget Summary, Analytics, Month Notes. Add buttons for Transactions, Money Sources, and Budget Log entries are in the CollapsibleCard headers.
 - Header: `dashboard-header.tsx` exposes AI Assistant, Import/Export, Help, Month selector. Mobile sidebar includes DialogTitle for accessibility.
 - CollapsibleCard: `collapsible-card.tsx` supports optional `action` prop for header buttons (e.g., Add buttons). Clicking action buttons won't trigger collapse/expand.
 - Dialogs: All dialog components (Add Transaction, Money Source, AI Assistant, etc.) use scrollable containers with `max-h-[90vh]` and `overflow-y-auto` on content areas to prevent overflow on small screens. Header and footer remain fixed while body scrolls.

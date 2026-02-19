@@ -34,6 +34,10 @@ import {
   handleImportData,
   handleStartNewMonth,
   handleUpdateMonthDescription,
+  handleInitializeBudgetLog,
+  handleAddBudgetLogEntry,
+  handleDeleteBudgetLogEntry,
+  handleUpdateBudgetLogEntry,
   migrateState,
 } from "./reducers";
 
@@ -68,7 +72,21 @@ type Action =
     }
   | { type: "SET_CURRENT_MONTH"; payload: Date }
   | { type: "START_NEW_MONTH" }
-  | { type: "UPDATE_MONTH_DESCRIPTION"; payload: string };
+  | { type: "UPDATE_MONTH_DESCRIPTION"; payload: string }
+  | { type: "INITIALIZE_BUDGET_LOG"; payload: string }
+  | {
+      type: "ADD_BUDGET_LOG_ENTRY";
+      payload: { description: string; changes: Record<string, number> };
+    }
+  | { type: "DELETE_BUDGET_LOG_ENTRY"; payload: string }
+  | {
+      type: "UPDATE_BUDGET_LOG_ENTRY";
+      payload: {
+        id: string;
+        description: string;
+        changes: Record<string, number>;
+      };
+    };
 
 /**
  * Budget reducer - handles all state mutations.
@@ -126,6 +144,18 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 
     case "UPDATE_MONTH_DESCRIPTION":
       return handleUpdateMonthDescription(state, action.payload);
+
+    case "INITIALIZE_BUDGET_LOG":
+      return handleInitializeBudgetLog(state, action.payload);
+
+    case "ADD_BUDGET_LOG_ENTRY":
+      return handleAddBudgetLogEntry(state, action.payload);
+
+    case "DELETE_BUDGET_LOG_ENTRY":
+      return handleDeleteBudgetLogEntry(state, action.payload);
+
+    case "UPDATE_BUDGET_LOG_ENTRY":
+      return handleUpdateBudgetLogEntry(state, action.payload);
 
     default:
       return state;

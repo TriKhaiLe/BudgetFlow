@@ -60,6 +60,21 @@ export interface HistoryLog {
   timestamp: string;
 }
 
+/**
+ * A budget log entry tracks a budget change across money sources.
+ * The first entry (isInitial=true) captures absolute starting budget values.
+ * Subsequent entries capture delta changes.
+ */
+export interface BudgetLogEntry {
+  id: string;
+  description: string;
+  /** Budget change per money source. Key is moneySourceId, value is the change amount (or absolute value for initial). */
+  changes: Record<string, number>;
+  /** Whether this is the initial budget snapshot (absolute values, not deltas) */
+  isInitial: boolean;
+  createdAt: string;
+}
+
 export interface BudgetMetadata {
   exportDate: string;
   month: number;
@@ -74,6 +89,7 @@ export interface BudgetState {
   featuredTransactions: FeaturedTransaction[];
   transactionTemplates: TransactionTemplate[];
   history: HistoryLog[];
+  budgetLog: BudgetLogEntry[];
   currentMonth: string;
   monthDescription?: string; // Optional description/notes for the current month
   metadata?: BudgetMetadata; // Optional for backward compatibility

@@ -8,6 +8,9 @@ import MoneySources, {
 import TransactionsView, {
   AddTransactionButton,
 } from "@/components/dashboard/transactions-view";
+import BudgetLogView, {
+  AddBudgetLogEntryButton,
+} from "@/components/dashboard/budget-log-view";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { Analytics } from "@/components/dashboard/analytics";
 import { CollapsibleCard } from "@/components/dashboard/collapsible-card";
@@ -19,6 +22,14 @@ export default function Home() {
       <div className="flex min-h-screen w-full flex-col overflow-x-hidden">
         <DashboardHeader />
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 overflow-x-hidden">
+          <CollapsibleCard
+            storageKey="budget-log-collapsed"
+            title="Budget Log"
+            action={<AddBudgetLogEntryButton />}
+          >
+            <BudgetLogView />
+          </CollapsibleCard>
+
           <CollapsibleCard
             storageKey="transactions-view-collapsed"
             title="Budget Transactions"

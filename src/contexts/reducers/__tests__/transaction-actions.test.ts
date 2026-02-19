@@ -25,6 +25,7 @@ describe('Transaction Actions', () => {
       featuredTransactions: [],
       transactionTemplates: [],
       history: [],
+      budgetLog: [],
       currentMonth: '2025-12',
     };
   });
