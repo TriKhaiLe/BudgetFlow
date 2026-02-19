@@ -22,8 +22,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, Trash2, Play } from "lucide-react";
+import { PlusCircle, Trash2, Play, Lock, LockOpen, Pen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { BudgetLogEntry } from "@/lib/types";
 import { formatNumberWithCommas } from "@/lib/utils";
@@ -254,12 +264,130 @@ function InitializeBudgetLogPrompt() {
   );
 }
 
+// ─── Edit Current Balances Dialog ─────────────────────────────────────────────
+
+function EditCurrentBalancesDialog({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { state, dispatch } = useBudget();
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [balances, setBalances] = useState<Record<string, string>>({});
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
+      // Initialize with current balance values
+      setBalances(
+        Object.fromEntries(
+          state.moneySources.map((ms) => [
+            ms.id,
+            formatNumberWithCommas(ms.balance),
+          ]),
+        ),
+      );
+    }
+  };
+
+  const handleChangeBalance = (msId: string, value: string) => {
+    const raw = value.replace(/,/g, "");
+    if (raw === "" || raw === "-" || /^-?\d*\.?\d*$/.test(raw)) {
+      setBalances((prev) => ({
+        ...prev,
+        [msId]: raw === "" || raw === "-" ? raw : formatNumberWithCommas(raw),
+      }));
+    }
+  };
+
+  const handleSubmit = () => {
+    let hasChange = false;
+    for (const ms of state.moneySources) {
+      const raw = balances[ms.id] || "";
+      const parsed = parseFormattedNumber(raw);
+      if (!isNaN(parsed) && parsed !== ms.balance) {
+        dispatch({
+          type: "ADJUST_BALANCE",
+          payload: { moneySourceId: ms.id, newBalance: parsed },
+        });
+        hasChange = true;
+      }
+    }
+    if (hasChange) {
+      toast({ title: "Success", description: "Balances updated." });
+    }
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edit Current Balances</DialogTitle>
+          <DialogDescription>
+            Adjust the current balance for each money source.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 py-2">
+          {state.moneySources.map((ms) => {
+            const parsed = parseFormattedNumber(balances[ms.id] || "");
+            const diff = isNaN(parsed) ? 0 : parsed - ms.balance;
+            return (
+              <div key={ms.id} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{ms.name}</span>
+                  {diff !== 0 && (
+                    <span
+                      className={`text-xs font-medium ${
+                        diff > 0
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {diff > 0 ? "+" : ""}
+                      {formatCurrency(diff)}
+                    </span>
+                  )}
+                </div>
+                <FormattedInput
+                  field={{
+                    value: balances[ms.id] || "",
+                    onChange: (val: string) => handleChangeBalance(ms.id, val),
+                  }}
+                  placeholder="0"
+                  showQuickButtons={false}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit}>Save Balances</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Budget Log Table ─────────────────────────────────────────────────────────
 
 function BudgetLogTable() {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
   const { moneySources, budgetLog } = state;
+  const locks = state.budgetLogBalanceLocks || {};
+
+  // Entry pending deletion (for confirmation)
+  const [pendingDelete, setPendingDelete] = useState<BudgetLogEntry | null>(
+    null,
+  );
 
   // Compute running totals for each entry
   const rows = useMemo(() => {
@@ -309,9 +437,23 @@ function BudgetLogTable() {
     return result;
   }, [budgetLog, moneySources]);
 
-  const handleDeleteEntry = (entryId: string) => {
-    dispatch({ type: "DELETE_BUDGET_LOG_ENTRY", payload: entryId });
-    toast({ title: "Deleted", description: "Budget log entry removed." });
+  const handleDeleteEntry = (entry: BudgetLogEntry) => {
+    setPendingDelete(entry);
+  };
+
+  const confirmDelete = () => {
+    if (pendingDelete) {
+      dispatch({
+        type: "DELETE_BUDGET_LOG_ENTRY",
+        payload: pendingDelete.id,
+      });
+      toast({ title: "Deleted", description: "Budget log entry removed." });
+      setPendingDelete(null);
+    }
+  };
+
+  const handleToggleLock = (msId: string) => {
+    dispatch({ type: "TOGGLE_BUDGET_LOG_BALANCE_LOCK", payload: msId });
   };
 
   return (
@@ -390,7 +532,7 @@ function BudgetLogTable() {
                         variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleDeleteEntry(entry.id)}
+                        onClick={() => handleDeleteEntry(entry)}
                         title="Delete entry"
                       >
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -408,7 +550,7 @@ function BudgetLogTable() {
                   >
                     <TableCell className="sticky left-0 bg-muted/20 z-10">
                       <span className="text-xs text-muted-foreground italic">
-                        Current
+                        Updated
                       </span>
                     </TableCell>
                     {moneySources.map((ms) => (
@@ -426,6 +568,69 @@ function BudgetLogTable() {
 
               return null;
             })}
+
+            {/* ── Current Balance Row ────────────────────────────────── */}
+            <TableRow className="border-t-2 bg-blue-50/50 dark:bg-blue-950/20">
+              <TableCell className="sticky left-0 bg-blue-50/50 dark:bg-blue-950/20 z-10">
+                <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                  Current Balance
+                </span>
+              </TableCell>
+              {moneySources.map((ms) => (
+                <TableCell key={ms.id} className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <span className="font-bold text-blue-700 dark:text-blue-300">
+                      {formatCurrency(ms.balance)}
+                    </span>
+                    <button
+                      onClick={() => handleToggleLock(ms.id)}
+                      className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                      title={
+                        locks[ms.id]
+                          ? "Balance locked — budget log entries won't affect this balance"
+                          : "Balance unlocked — budget log entries will affect this balance"
+                      }
+                    >
+                      {locks[ms.id] ? (
+                        <Lock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                      ) : (
+                        <LockOpen className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
+                </TableCell>
+              ))}
+              <TableCell>
+                <EditCurrentBalancesDialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    title="Edit current balances"
+                  >
+                    <Pen className="h-3.5 w-3.5" />
+                  </Button>
+                </EditCurrentBalancesDialog>
+              </TableCell>
+            </TableRow>
+
+            {/* ── Spent Row ──────────────────────────────────────────── */}
+            <TableRow className="bg-red-50/30 dark:bg-red-950/10">
+              <TableCell className="sticky left-0 bg-red-50/30 dark:bg-red-950/10 z-10">
+                <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                  Spent
+                </span>
+              </TableCell>
+              {moneySources.map((ms) => (
+                <TableCell
+                  key={ms.id}
+                  className="text-right font-medium text-red-600 dark:text-red-400"
+                >
+                  {formatCurrency(ms.spent)}
+                </TableCell>
+              ))}
+              <TableCell />
+            </TableRow>
           </TableBody>
         </Table>
       </div>
@@ -434,6 +639,35 @@ function BudgetLogTable() {
       <div className="flex justify-start pt-2">
         <AddEntryDialog />
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Budget Log Entry</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{pendingDelete?.description}
+              &quot;? This will reverse its budget
+              {Object.values(locks).some(Boolean)
+                ? " and unlocked balance"
+                : " and balance"}{" "}
+              changes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

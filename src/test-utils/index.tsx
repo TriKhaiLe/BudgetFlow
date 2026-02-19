@@ -8,7 +8,7 @@ import type { BudgetState } from "@/lib/types";
  */
 export function renderWithProvider(
   ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
+  options?: Omit<RenderOptions, "wrapper">,
 ) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return <BudgetProvider>{children}</BudgetProvider>;
@@ -65,7 +65,7 @@ export function setupLocalStorageMock() {
  * Create a mock budget state for testing
  */
 export function createMockBudgetState(
-  overrides?: Partial<BudgetState>
+  overrides?: Partial<BudgetState>,
 ): BudgetState {
   return {
     moneySources: [
@@ -134,6 +134,8 @@ export function createMockBudgetState(
     ],
     currentMonth: new Date("2025-12-01").toISOString(),
     monthDescription: "Test month description",
+    budgetLog: [],
+    budgetLogBalanceLocks: {},
     ...overrides,
   };
 }

@@ -3,8 +3,27 @@ import { appendHistory } from './history-helpers';
 import { formatCurrency } from '@/lib/utils';
 
 /**
+ * Handles toggling the balance lock for a specific money source in the budget log.
+ * When locked, budget log entries won't affect the current balance for that money source.
+ */
+export function handleToggleBudgetLogBalanceLock(
+  state: BudgetState,
+  moneySourceId: string
+): BudgetState {
+  const locks = state.budgetLogBalanceLocks || {};
+  return {
+    ...state,
+    budgetLogBalanceLocks: {
+      ...locks,
+      [moneySourceId]: !locks[moneySourceId],
+    },
+  };
+}
+
+/**
  * Handles initializing the budget log with current money source budgets.
  * Creates an initial entry (isInitial=true) capturing absolute budget values.
+ * Also resets balance to match budget (current balance = initial budget at start).
  */
 export function handleInitializeBudgetLog(
   state: BudgetState,
@@ -31,19 +50,27 @@ export function handleInitializeBudgetLog(
   return {
     ...state,
     budgetLog: [initialEntry],
+    // Reset balance to budget at init, so current balance = initial budget
+    moneySources: state.moneySources.map((ms) => ({
+      ...ms,
+      balance: ms.budget,
+      spent: 0,
+    })),
+    budgetLogBalanceLocks: {},
     history: appendHistory(state.history, 'Initialized budget log tracking'),
   };
 }
 
 /**
  * Handles adding a new budget log entry.
- * Updates money source budgets by the delta amounts in changes.
+ * Updates money source budgets AND balances (unless locked) by the delta amounts.
  */
 export function handleAddBudgetLogEntry(
   state: BudgetState,
   payload: { description: string; changes: Record<string, number> }
 ): BudgetState {
   const { description, changes } = payload;
+  const locks = state.budgetLogBalanceLocks || {};
 
   const newEntry: BudgetLogEntry = {
     id: crypto.randomUUID(),
@@ -70,8 +97,10 @@ export function handleAddBudgetLogEntry(
       if (!delta) return ms;
 
       const newBudget = ms.budget + delta;
-      const newSpent = newBudget - ms.balance;
-      return { ...ms, budget: newBudget, spent: newSpent };
+      const isLocked = !!locks[ms.id];
+      const newBalance = isLocked ? ms.balance : ms.balance + delta;
+      const newSpent = newBudget - newBalance;
+      return { ...ms, budget: newBudget, balance: newBalance, spent: newSpent };
     }),
     history: appendHistory(
       state.history,
@@ -82,7 +111,7 @@ export function handleAddBudgetLogEntry(
 
 /**
  * Handles deleting a budget log entry.
- * Reverses the budget changes if the entry is not the initial entry.
+ * Reverses the budget AND balance changes if the entry is not the initial entry.
  */
 export function handleDeleteBudgetLogEntry(
   state: BudgetState,
@@ -96,7 +125,9 @@ export function handleDeleteBudgetLogEntry(
     return state;
   }
 
-  // Reverse budget changes for non-initial entries
+  const locks = state.budgetLogBalanceLocks || {};
+
+  // Reverse budget and balance changes for non-initial entries
   const updatedMoneySources = entry.isInitial
     ? state.moneySources
     : state.moneySources.map((ms) => {
@@ -104,8 +135,10 @@ export function handleDeleteBudgetLogEntry(
         if (!delta) return ms;
 
         const newBudget = ms.budget - delta;
-        const newSpent = newBudget - ms.balance;
-        return { ...ms, budget: newBudget, spent: newSpent };
+        const isLocked = !!locks[ms.id];
+        const newBalance = isLocked ? ms.balance : ms.balance - delta;
+        const newSpent = newBudget - newBalance;
+        return { ...ms, budget: newBudget, balance: newBalance, spent: newSpent };
       });
 
   return {
@@ -121,7 +154,7 @@ export function handleDeleteBudgetLogEntry(
 
 /**
  * Handles updating an existing budget log entry.
- * Reverses old changes and applies new ones for non-initial entries.
+ * Reverses old changes and applies new ones (both budget AND balance, unless locked).
  */
 export function handleUpdateBudgetLogEntry(
   state: BudgetState,
@@ -130,6 +163,8 @@ export function handleUpdateBudgetLogEntry(
   const { id, description, changes: newChanges } = payload;
   const oldEntry = state.budgetLog.find((e) => e.id === id);
   if (!oldEntry) return state;
+
+  const locks = state.budgetLogBalanceLocks || {};
 
   const updatedEntry: BudgetLogEntry = {
     ...oldEntry,
@@ -147,8 +182,10 @@ export function handleUpdateBudgetLogEntry(
         if (netChange === 0) return ms;
 
         const newBudget = ms.budget + netChange;
-        const newSpent = newBudget - ms.balance;
-        return { ...ms, budget: newBudget, spent: newSpent };
+        const isLocked = !!locks[ms.id];
+        const newBalance = isLocked ? ms.balance : ms.balance + netChange;
+        const newSpent = newBudget - newBalance;
+        return { ...ms, budget: newBudget, balance: newBalance, spent: newSpent };
       });
 
   return {

@@ -13,6 +13,7 @@ export const initialBudgetState: BudgetState = {
   transactionTemplates: [],
   history: [],
   budgetLog: [],
+  budgetLogBalanceLocks: {},
   currentMonth: startOfMonth(new Date()).toISOString(),
   monthDescription: '',
 };
@@ -176,6 +177,11 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   if (!parsedState.budgetLog) {
     (parsedState as any).budgetLog = [];
     warnings.push('Missing budgetLog');
+  }
+
+  // Ensure budgetLogBalanceLocks exists
+  if (!parsedState.budgetLogBalanceLocks) {
+    parsedState.budgetLogBalanceLocks = {};
   }
 
   // Ensure spent is computed correctly for all money sources

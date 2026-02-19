@@ -90,6 +90,8 @@ export interface BudgetState {
   transactionTemplates: TransactionTemplate[];
   history: HistoryLog[];
   budgetLog: BudgetLogEntry[];
+  /** Per-money-source lock: when locked, budget log entries won't affect current balance */
+  budgetLogBalanceLocks?: Record<string, boolean>;
   currentMonth: string;
   monthDescription?: string; // Optional description/notes for the current month
   metadata?: BudgetMetadata; // Optional for backward compatibility
