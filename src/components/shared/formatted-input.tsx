@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatNumberWithCommas } from "@/lib/utils";
@@ -31,11 +31,17 @@ export function FormattedInput({
   quickButtonValues = ["00", "000"],
   className,
 }: FormattedInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value.replace(/,/g, "");
-    // Allow digits and one decimal point
-    if (/^\d*\.?\d*$/.test(rawValue)) {
-      field.onChange(formatNumberWithCommas(rawValue));
+    // Allow optional leading minus, digits, and one decimal point
+    if (rawValue === "" || rawValue === "-" || /^-?\d*\.?\d*$/.test(rawValue)) {
+      field.onChange(
+        rawValue === "" || rawValue === "-"
+          ? rawValue
+          : formatNumberWithCommas(rawValue),
+      );
     }
   };
 
@@ -43,10 +49,14 @@ export function FormattedInput({
     const currentValue = field.value || "";
     const rawValue = currentValue.replace(/,/g, "");
     field.onChange(formatNumberWithCommas(rawValue + value));
+    // Refocus the input after quick-add
+    inputRef.current?.focus();
   };
 
   const handleClear = () => {
     field.onChange("");
+    // Keep focus on the input after clearing
+    inputRef.current?.focus();
   };
 
   const hasValue = field.value && field.value.length > 0;
@@ -59,7 +69,7 @@ export function FormattedInput({
         onChange={handleInputChange}
         onBlur={field.onBlur}
         name={field.name}
-        ref={field.ref}
+        ref={inputRef}
         className="pr-[140px]"
         style={{ textOverflow: "ellipsis" }}
       />
@@ -71,6 +81,7 @@ export function FormattedInput({
             variant="ghost"
             className="h-7 w-7 p-0"
             onClick={handleClear}
+            tabIndex={-1}
             title="Clear"
           >
             <X className="h-3.5 w-3.5" />
@@ -84,6 +95,7 @@ export function FormattedInput({
               size="sm"
               variant="ghost"
               className="h-7 px-2"
+              tabIndex={-1}
               onClick={() => handleQuickButtonClick(value)}
             >
               {value}

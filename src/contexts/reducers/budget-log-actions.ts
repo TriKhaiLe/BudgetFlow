@@ -158,9 +158,9 @@ export function handleDeleteBudgetLogEntry(
  */
 export function handleUpdateBudgetLogEntry(
   state: BudgetState,
-  payload: { id: string; description: string; changes: Record<string, number> }
+  payload: { id: string; description: string; changes: Record<string, number>; createdAt?: string }
 ): BudgetState {
-  const { id, description, changes: newChanges } = payload;
+  const { id, description, changes: newChanges, createdAt } = payload;
   const oldEntry = state.budgetLog.find((e) => e.id === id);
   if (!oldEntry) return state;
 
@@ -170,6 +170,7 @@ export function handleUpdateBudgetLogEntry(
     ...oldEntry,
     description,
     changes: newChanges,
+    ...(createdAt ? { createdAt } : {}),
   };
 
   // For non-initial entries, reverse old changes and apply new ones

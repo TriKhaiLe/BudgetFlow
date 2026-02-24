@@ -86,6 +86,7 @@ type Action =
         id: string;
         description: string;
         changes: Record<string, number>;
+        createdAt?: string;
       };
     }
   | { type: "TOGGLE_BUDGET_LOG_BALANCE_LOCK"; payload: string };
