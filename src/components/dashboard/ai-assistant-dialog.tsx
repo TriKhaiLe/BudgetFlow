@@ -102,22 +102,19 @@ export function AIAssistantDialog() {
   function onConfirm(values: { moneySourceId: string }) {
     if (!suggestion || !values.moneySourceId) return;
 
+    const delta = suggestion.type === "income" ? suggestion.amount : -suggestion.amount;
+
     dispatch({
-      type: "ADD_TRANSACTION",
+      type: "ADD_BUDGET_LOG_ENTRY",
       payload: {
-        description: form.getValues("description"),
-        amount: suggestion.amount,
-        category: suggestion.category,
-        date: new Date().toISOString(),
-        moneySourceId: values.moneySourceId,
-        type: suggestion.type,
-        affectBalance: true,
+        description: `[AI] ${form.getValues("description")}`,
+        changes: { [values.moneySourceId]: delta },
       },
     });
 
     toast({
       title: "Success!",
-      description: "AI-assisted transaction has been added.",
+      description: "AI-assisted budget entry has been added.",
     });
     setIsOpen(false);
     form.reset();

@@ -8,9 +8,7 @@ import { appendHistory, createHistoryEntry } from './history-helpers';
  */
 export const initialBudgetState: BudgetState = {
   moneySources: [],
-  transactions: [],
-  featuredTransactions: [],
-  transactionTemplates: [],
+  templates: [],
   history: [],
   budgetLog: [],
   budgetLogBalanceLocks: {},
@@ -73,8 +71,6 @@ export function handleStartNewMonth(state: BudgetState): BudgetState {
       spent: 0, // spent = budget - balance = balance - balance = 0
       lastBalanceUpdate: undefined, // Clear timestamp for new month
     })),
-    transactions: [], // Clear all transactions
-    featuredTransactions: [], // Clear featured transactions
     budgetLog: state.moneySources.length > 0 ? [{
       id: crypto.randomUUID(),
       description: 'Last month balance',
@@ -119,9 +115,10 @@ export function handleImportData(
       moneySources: migratedImportedState.moneySources.map((ms) => ({
         ...ms,
         budget: ms.balance,
-        spent: 0, // spent = budget - balance = balance - balance = 0
-        lastBalanceUpdate: undefined, // Clear timestamp for fresh start
+        spent: 0,
+        lastBalanceUpdate: undefined,
       })),
+      templates: migratedImportedState.templates || [],
       history: [
         createHistoryEntry(
           'Data imported for next month. Budgets set from previous balances, spending reset.'
@@ -145,24 +142,30 @@ export function migrateState(parsedState: BudgetState): BudgetState {
     warnings.push('Missing currentMonth, defaulted to current month');
   }
 
-  // Migrate transaction types (backward compatibility)
-  if (parsedState.transactions) {
-    parsedState.transactions = parsedState.transactions.map((t: any) => ({
-      ...t,
-      type: t.type === 'expense' ? 'withdraw' : (t.type || (t.amount > 0 ? 'income' : 'withdraw')),
-      amount: Math.abs(t.amount),
-    }));
+  // Migrate old transactionTemplates to templates (backward compatibility)
+  const legacyState = parsedState as any;
+  if (!parsedState.templates) {
+    if (legacyState.transactionTemplates && Array.isArray(legacyState.transactionTemplates)) {
+      // Convert old TransactionTemplate to BudgetLogTemplate
+      parsedState.templates = legacyState.transactionTemplates.map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description || '',
+        changes: t.moneySourceId ? { [t.moneySourceId]: t.type === 'income' ? t.amount : -t.amount } : {},
+      }));
+      warnings.push('Migrated transactionTemplates to templates');
+    } else {
+      parsedState.templates = [];
+      warnings.push('Missing templates');
+    }
   }
 
+  // Clean up legacy fields
+  delete legacyState.transactions;
+  delete legacyState.featuredTransactions;
+  delete legacyState.transactionTemplates;
+
   // Ensure arrays exist
-  if (!parsedState.featuredTransactions) {
-    parsedState.featuredTransactions = [];
-    warnings.push('Missing featuredTransactions');
-  }
-  if (!parsedState.transactionTemplates) {
-    parsedState.transactionTemplates = [];
-    warnings.push('Missing transactionTemplates');
-  }
   if (!parsedState.history) {
     parsedState.history = [];
     warnings.push('Missing history');

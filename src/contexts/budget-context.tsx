@@ -8,13 +8,7 @@ import React, {
   ReactNode,
   Dispatch,
 } from "react";
-import type {
-  BudgetState,
-  MoneySource,
-  Transaction,
-  FeaturedTransaction,
-  TransactionTemplate,
-} from "@/lib/types";
+import type { BudgetState, MoneySource, BudgetLogTemplate } from "@/lib/types";
 import { STORAGE_KEY } from "@/lib/constants";
 import {
   initialBudgetState,
@@ -22,11 +16,6 @@ import {
   handleUpdateMoneySource,
   handleDeleteMoneySource,
   handleAdjustBalance,
-  handleAddTransaction,
-  handleUpdateTransaction,
-  handleDeleteTransaction,
-  handleAddFeaturedTransaction,
-  handleDeleteFeaturedTransaction,
   handleAddTemplate,
   handleUpdateTemplate,
   handleDeleteTemplate,
@@ -47,21 +36,8 @@ type Action =
   | { type: "ADD_MONEY_SOURCE"; payload: Omit<MoneySource, "id" | "spent"> }
   | { type: "UPDATE_MONEY_SOURCE"; payload: MoneySource }
   | { type: "DELETE_MONEY_SOURCE"; payload: string }
-  | {
-      type: "ADD_TRANSACTION";
-      payload: Omit<Transaction, "id" | "snapshot"> & {
-        affectBalance: boolean;
-      };
-    }
-  | { type: "UPDATE_TRANSACTION"; payload: Transaction }
-  | { type: "DELETE_TRANSACTION"; payload: Transaction }
-  | {
-      type: "ADD_FEATURED_TRANSACTION";
-      payload: Omit<FeaturedTransaction, "id" | "date">;
-    }
-  | { type: "DELETE_FEATURED_TRANSACTION"; payload: string }
-  | { type: "ADD_TEMPLATE"; payload: Omit<TransactionTemplate, "id"> }
-  | { type: "UPDATE_TEMPLATE"; payload: TransactionTemplate }
+  | { type: "ADD_TEMPLATE"; payload: Omit<BudgetLogTemplate, "id"> }
+  | { type: "UPDATE_TEMPLATE"; payload: BudgetLogTemplate }
   | { type: "DELETE_TEMPLATE"; payload: string }
   | {
       type: "IMPORT_DATA";
@@ -114,21 +90,6 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 
     case "DELETE_MONEY_SOURCE":
       return handleDeleteMoneySource(state, action.payload);
-
-    case "ADD_TRANSACTION":
-      return handleAddTransaction(state, action.payload);
-
-    case "UPDATE_TRANSACTION":
-      return handleUpdateTransaction(state, action.payload);
-
-    case "DELETE_TRANSACTION":
-      return handleDeleteTransaction(state, action.payload);
-
-    case "ADD_FEATURED_TRANSACTION":
-      return handleAddFeaturedTransaction(state, action.payload);
-
-    case "DELETE_FEATURED_TRANSACTION":
-      return handleDeleteFeaturedTransaction(state, action.payload);
 
     case "ADD_TEMPLATE":
       return handleAddTemplate(state, action.payload);

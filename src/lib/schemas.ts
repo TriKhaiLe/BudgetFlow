@@ -51,45 +51,6 @@ export const moneySourceSchema = z.object({
 export type MoneySourceFormValues = z.infer<typeof moneySourceSchema>;
 
 /**
- * Schema for transaction form validation.
- */
-export const transactionSchema = z.object({
-  description: z.string().optional(),
-  amount: positiveAmountSchema,
-  category: z.string().optional(),
-  moneySourceId: z.string().min(1, 'Please select a money source.'),
-  type: z.enum(['income', 'withdraw', 'transfer']),
-  targetMoneySourceId: z.string().optional(),
-  date: z.date(),
-  affectBalance: z.boolean(),
-}).refine(
-  (data) => {
-    // For transfer type, targetMoneySourceId is required and must be different from source
-    if (data.type === 'transfer') {
-      return data.targetMoneySourceId && data.targetMoneySourceId.length > 0 && data.targetMoneySourceId !== data.moneySourceId;
-    }
-    return true;
-  },
-  {
-    message: 'Please select a different target money source for transfer.',
-    path: ['targetMoneySourceId'],
-  }
-);
-
-export type TransactionFormValues = z.infer<typeof transactionSchema>;
-
-/**
- * Schema for featured transaction form validation.
- */
-export const featuredTransactionSchema = z.object({
-  description: z.string().optional(),
-  category: z.string().min(1, 'Category is required.'),
-  amount: positiveAmountSchema,
-});
-
-export type FeaturedTransactionFormValues = z.infer<typeof featuredTransactionSchema>;
-
-/**
  * Schema for balance update form validation.
  */
 export const updateBalanceSchema = z.object({
@@ -106,31 +67,3 @@ export const aiAssistantSchema = z.object({
 });
 
 export type AiAssistantFormValues = z.infer<typeof aiAssistantSchema>;
-
-/**
- * Schema for transaction template form validation.
- */
-export const transactionTemplateSchema = z.object({
-  name: z.string().min(1, 'Template name is required.'),
-  description: z.string().optional(),
-  amount: positiveAmountSchema,
-  category: z.string().optional(),
-  moneySourceId: z.string().min(1, 'Please select a money source.'),
-  type: z.enum(['income', 'withdraw', 'transfer']),
-  targetMoneySourceId: z.string().optional(),
-  affectBalance: z.boolean(),
-}).refine(
-  (data) => {
-    // For transfer type, targetMoneySourceId is required and must be different from source
-    if (data.type === 'transfer') {
-      return data.targetMoneySourceId && data.targetMoneySourceId.length > 0 && data.targetMoneySourceId !== data.moneySourceId;
-    }
-    return true;
-  },
-  {
-    message: 'Please select a different target money source for transfer.',
-    path: ['targetMoneySourceId'],
-  }
-);
-
-export type TransactionTemplateFormValues = z.infer<typeof transactionTemplateSchema>;

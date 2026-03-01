@@ -51,10 +51,9 @@ export function handleDeleteMoneySource(
   return {
     ...state,
     moneySources: state.moneySources.filter((ms) => ms.id !== sourceId),
-    transactions: state.transactions.filter((t) => t.moneySourceId !== sourceId),
     history: appendHistory(
       state.history,
-      `Deleted money source: ${sourceToDelete.name} and its transactions.`
+      `Deleted money source: ${sourceToDelete.name}`
     ),
   };
 }

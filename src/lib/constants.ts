@@ -10,26 +10,6 @@ import {
 } from 'lucide-react';
 
 /**
- * Category suggestion options for transaction forms.
- * Used in combobox/select components for category selection.
- */
-export const CATEGORY_SUGGESTIONS = [
-  { value: 'transfer', label: 'Transfer' },
-  { value: 'food', label: 'Food & Groceries' },
-  { value: 'transport', label: 'Transport' },
-  { value: 'housing', label: 'Housing' },
-  { value: 'salary', label: 'Salary' },
-  { value: 'entertainment', label: 'Entertainment' },
-  { value: 'health', label: 'Health' },
-  { value: 'shopping', label: 'Shopping' },
-  { value: 'personal care', label: 'Personal Care' },
-  { value: 'investment', label: 'Investment' },
-  { value: 'other', label: 'Other' },
-] as const;
-
-export type CategoryValue = typeof CATEGORY_SUGGESTIONS[number]['value'];
-
-/**
  * History icon configuration for transaction history display.
  * Maps action keywords to icons and colors.
  */
@@ -75,12 +55,6 @@ export function getHistoryIconConfig(description: string): HistoryIconConfig {
  * Local storage key for persisting budget state.
  */
 export const STORAGE_KEY = 'budgetFlowState';
-
-/**
- * Transaction types for the application.
- */
-export const TRANSACTION_TYPES = ['income', 'withdraw'] as const;
-export type TransactionType = typeof TRANSACTION_TYPES[number];
 
 /**
  * Data import strategies.

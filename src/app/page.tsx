@@ -5,12 +5,10 @@ import BudgetSummary from "@/components/dashboard/budget-summary";
 import MoneySources, {
   AddMoneySourceButton,
 } from "@/components/dashboard/money-sources";
-import TransactionsView, {
-  AddTransactionButton,
-} from "@/components/dashboard/transactions-view";
 import BudgetLogView, {
   AddBudgetLogEntryButton,
 } from "@/components/dashboard/budget-log-view";
+import HistoryView from "@/components/dashboard/history-view";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { Analytics } from "@/components/dashboard/analytics";
 import { CollapsibleCard } from "@/components/dashboard/collapsible-card";
@@ -24,7 +22,7 @@ export default function Home() {
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 overflow-x-hidden">
           <CollapsibleCard
             storageKey="budget-log-collapsed"
-            title="Budget Log"
+            title="Budget Transactions"
             action={<AddBudgetLogEntryButton />}
           >
             <BudgetLogView />
@@ -32,10 +30,9 @@ export default function Home() {
 
           <CollapsibleCard
             storageKey="transactions-view-collapsed"
-            title="Budget Transactions"
-            action={<AddTransactionButton />}
+            title="Budget Log"
           >
-            <TransactionsView />
+            <HistoryView />
           </CollapsibleCard>
 
           <CollapsibleCard

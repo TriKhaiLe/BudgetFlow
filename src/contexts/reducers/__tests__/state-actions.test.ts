@@ -30,29 +30,10 @@ describe('State Actions', () => {
           balance: 1500,
         },
       ],
-      transactions: [
-        {
-          id: 'trans-1',
-          description: 'Groceries',
-          amount: 100,
-          category: 'Food',
-          date: '2025-12-01',
-          moneySourceId: 'source-1',
-          type: 'withdraw',
-        },
-      ],
-      featuredTransactions: [
-        {
-          id: 'featured-1',
-          description: 'Important',
-          category: 'Savings',
-          amount: 1000,
-          date: '2025-12-01',
-        },
-      ],
-      transactionTemplates: [],
+      templates: [],
       history: [],
       budgetLog: [],
+      budgetLogBalanceLocks: {},
       currentMonth: '2025-12-01T00:00:00.000Z',
       monthDescription: 'December budget',
     };
@@ -61,11 +42,10 @@ describe('State Actions', () => {
   describe('initialBudgetState', () => {
     it('should have correct initial structure', () => {
       expect(initialBudgetState.moneySources).toEqual([]);
-      expect(initialBudgetState.transactions).toEqual([]);
-      expect(initialBudgetState.featuredTransactions).toEqual([]);
-      expect(initialBudgetState.transactionTemplates).toEqual([]);
+      expect(initialBudgetState.templates).toEqual([]);
       expect(initialBudgetState.history).toEqual([]);
       expect(initialBudgetState.budgetLog).toEqual([]);
+      expect(initialBudgetState.budgetLogBalanceLocks).toEqual({});
       expect(initialBudgetState.monthDescription).toBe('');
       expect(initialBudgetState.currentMonth).toBeTruthy();
     });
@@ -87,7 +67,7 @@ describe('State Actions', () => {
       const result = handleSetCurrentMonth(initialState, newDate);
 
       expect(result.moneySources).toEqual(initialState.moneySources);
-      expect(result.transactions).toEqual(initialState.transactions);
+      expect(result.templates).toEqual(initialState.templates);
     });
   });
 
@@ -135,13 +115,6 @@ describe('State Actions', () => {
       expect(result.moneySources[1].spent).toBe(0);
     });
 
-    it('should clear transactions and featured transactions', () => {
-      const result = handleStartNewMonth(initialState);
-
-      expect(result.transactions).toEqual([]);
-      expect(result.featuredTransactions).toEqual([]);
-    });
-
     it('should create initial budget log entry from previous balances', () => {
       const result = handleStartNewMonth(initialState);
 
@@ -176,6 +149,31 @@ describe('State Actions', () => {
       expect(result.moneySources[1].id).toBe('source-2');
       expect(result.moneySources[1].name).toBe('Savings');
     });
+
+    it('should clear lastBalanceUpdate for new month', () => {
+      const stateWithTimestamp: BudgetState = {
+        ...initialState,
+        moneySources: initialState.moneySources.map(ms => ({
+          ...ms,
+          lastBalanceUpdate: '2025-12-15T00:00:00.000Z',
+        })),
+      };
+
+      const result = handleStartNewMonth(stateWithTimestamp);
+      result.moneySources.forEach(ms => {
+        expect(ms.lastBalanceUpdate).toBeUndefined();
+      });
+    });
+
+    it('should handle empty money sources', () => {
+      const emptyState: BudgetState = {
+        ...initialState,
+        moneySources: [],
+      };
+      const result = handleStartNewMonth(emptyState);
+      expect(result.budgetLog).toEqual([]);
+      expect(result.moneySources).toEqual([]);
+    });
   });
 
   describe('handleImportData', () => {
@@ -189,21 +187,10 @@ describe('State Actions', () => {
           balance: 2500,
         },
       ],
-      transactions: [
-        {
-          id: 'imported-trans-1',
-          description: 'Imported Transaction',
-          amount: 200,
-          category: 'Shopping',
-          date: '2025-11-15',
-          moneySourceId: 'imported-1',
-          type: 'withdraw',
-        },
-      ],
-      featuredTransactions: [],
-      transactionTemplates: [],
+      templates: [],
       history: [],
       budgetLog: [],
+      budgetLogBalanceLocks: {},
       currentMonth: '2025-11-01T00:00:00.000Z',
     };
 
@@ -215,7 +202,6 @@ describe('State Actions', () => {
         });
 
         expect(result.moneySources).toEqual(importedState.moneySources);
-        expect(result.transactions).toEqual(importedState.transactions);
         expect(result.currentMonth).toBe(importedState.currentMonth);
         expect(result.history.length).toBeGreaterThan(0);
         expect(result.history[result.history.length - 1].description).toContain('Data imported and replaced');
@@ -231,16 +217,6 @@ describe('State Actions', () => {
 
         expect(result.moneySources[0].budget).toBe(2500); // Imported balance
         expect(result.moneySources[0].spent).toBe(0);
-      });
-
-      it('should clear transactions for new month', () => {
-        const result = handleImportData(initialState, {
-          state: importedState,
-          strategy: 'NEXT_MONTH',
-        });
-
-        expect(result.transactions).toEqual([]);
-        expect(result.featuredTransactions).toEqual([]);
       });
 
       it('should set month to next month', () => {
@@ -266,6 +242,19 @@ describe('State Actions', () => {
         expect(result.history).toHaveLength(1);
         expect(result.history[0].description).toContain('Data imported for next month');
       });
+
+      it('should preserve templates from import', () => {
+        const stateWithTemplates: BudgetState = {
+          ...importedState,
+          templates: [{ id: 'tpl-1', name: 'Test', description: '', changes: { 'imported-1': -100 } }],
+        };
+        const result = handleImportData(initialState, {
+          state: stateWithTemplates,
+          strategy: 'NEXT_MONTH',
+        });
+        expect(result.templates).toHaveLength(1);
+        expect(result.templates[0].name).toBe('Test');
+      });
     });
   });
 
@@ -281,41 +270,83 @@ describe('State Actions', () => {
       expect(result.currentMonth).toBeTruthy();
     });
 
-    it('should migrate transaction types', () => {
+    it('should migrate legacy transactionTemplates to templates', () => {
       const legacyState = {
         ...initialState,
-        transactions: [
+        templates: undefined as any,
+        transactionTemplates: [
           {
-            id: 'trans-1',
-            description: 'Old transaction',
-            amount: -100, // Negative amount
-            category: 'Food',
-            date: '2025-12-01',
+            id: 'tpl-1',
+            name: 'Groceries',
+            description: 'Weekly groceries',
+            amount: 200,
             moneySourceId: 'source-1',
-            type: undefined as any, // Missing type
+            type: 'withdraw',
+            category: 'Food',
+            affectBalance: true,
           },
         ],
-      };
+      } as any;
 
       const result = migrateState(legacyState);
 
-      expect(result.transactions[0].type).toBe('withdraw');
-      expect(result.transactions[0].amount).toBe(100); // Converted to positive
+      expect(result.templates).toHaveLength(1);
+      expect(result.templates[0].id).toBe('tpl-1');
+      expect(result.templates[0].name).toBe('Groceries');
+      expect(result.templates[0].description).toBe('Weekly groceries');
+      expect(result.templates[0].changes['source-1']).toBe(-200); // withdraw → negative
     });
 
-    it('should add missing arrays', () => {
+    it('should migrate income transactionTemplate as positive amount', () => {
       const legacyState = {
         ...initialState,
-        featuredTransactions: undefined as any,
-        transactionTemplates: undefined as any,
+        templates: undefined as any,
+        transactionTemplates: [
+          {
+            id: 'tpl-2',
+            name: 'Salary',
+            amount: 5000,
+            moneySourceId: 'source-1',
+            type: 'income',
+          },
+        ],
+      } as any;
+
+      const result = migrateState(legacyState);
+
+      expect(result.templates[0].changes['source-1']).toBe(5000); // income → positive
+    });
+
+    it('should clean up legacy fields', () => {
+      const legacyState = {
+        ...initialState,
+        transactions: [{ id: 'old-trans' }],
+        featuredTransactions: [{ id: 'old-feat' }],
+        transactionTemplates: [],
+      } as any;
+
+      const result = migrateState(legacyState) as any;
+
+      expect(result.transactions).toBeUndefined();
+      expect(result.featuredTransactions).toBeUndefined();
+      expect(result.transactionTemplates).toBeUndefined();
+    });
+
+    it('should add missing arrays and defaults', () => {
+      const legacyState = {
+        ...initialState,
         history: undefined as any,
+        budgetLog: undefined as any,
+        budgetLogBalanceLocks: undefined as any,
+        monthDescription: undefined as any,
       };
 
       const result = migrateState(legacyState);
 
-      expect(result.featuredTransactions).toEqual([]);
-      expect(result.transactionTemplates).toEqual([]);
       expect(result.history).toEqual([]);
+      expect(result.budgetLog).toEqual([]);
+      expect(result.budgetLogBalanceLocks).toEqual({});
+      expect(result.monthDescription).toBe('');
     });
 
     it('should add missing monthDescription', () => {
@@ -357,11 +388,24 @@ describe('State Actions', () => {
       expect(result.metadata).toBeUndefined();
     });
 
+    it('should recompute spent for money sources', () => {
+      const stateWithBadSpent = {
+        ...initialState,
+        moneySources: [
+          { id: 'ms-1', name: 'Test', budget: 1000, balance: 800, spent: 999 }, // wrong spent
+        ],
+      };
+
+      const result = migrateState(stateWithBadSpent);
+
+      expect(result.moneySources[0].spent).toBe(200); // budget - balance
+    });
+
     it('should handle fully valid state', () => {
       const result = migrateState(initialState);
 
       expect(result.currentMonth).toBe(initialState.currentMonth);
-      expect(result.moneySources).toEqual(initialState.moneySources);
+      expect(result.moneySources).toHaveLength(initialState.moneySources.length);
     });
   });
 });

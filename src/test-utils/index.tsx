@@ -84,45 +84,12 @@ export function createMockBudgetState(
         balance: 1500,
       },
     ],
-    transactions: [
-      {
-        id: "trans-1",
-        description: "Test Groceries",
-        amount: 200,
-        category: "Food",
-        date: "2025-12-15",
-        moneySourceId: "source-1",
-        type: "withdraw",
-      },
-      {
-        id: "trans-2",
-        description: "Test Freelance",
-        amount: 500,
-        category: "Income",
-        date: "2025-12-20",
-        moneySourceId: "source-2",
-        type: "income",
-      },
-    ],
-    featuredTransactions: [
-      {
-        id: "featured-1",
-        description: "Important Payment",
-        category: "Bills",
-        amount: 1000,
-        date: "2025-12-01",
-      },
-    ],
-    transactionTemplates: [
+    templates: [
       {
         id: "template-1",
-        name: "Monthly Rent",
-        description: "Apartment rent",
-        amount: 1500,
-        category: "Housing",
-        moneySourceId: "source-1",
-        type: "withdraw",
-        affectBalance: true,
+        name: "Monthly Transfer",
+        description: "Transfer between sources",
+        changes: { "source-1": -500, "source-2": 500 },
       },
     ],
     history: [

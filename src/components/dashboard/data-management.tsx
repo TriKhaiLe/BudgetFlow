@@ -27,7 +27,7 @@ export function DataManagement() {
     "REPLACE" | "NEXT_MONTH"
   >("REPLACE");
   const [importedData, setImportedData] = React.useState<BudgetState | null>(
-    null
+    null,
   );
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false);
 
@@ -88,14 +88,12 @@ export function DataManagement() {
         if (typeof text === "string") {
           const parsedData = JSON.parse(text);
           // Basic validation
-          if ("moneySources" in parsedData && "transactions" in parsedData) {
+          if ("moneySources" in parsedData) {
             // Check for missing fields and show warning
             const missingFields: string[] = [];
             if (!parsedData.metadata) missingFields.push("metadata");
-            if (!parsedData.transactionTemplates)
+            if (!parsedData.templates && !parsedData.transactionTemplates)
               missingFields.push("templates");
-            if (!parsedData.featuredTransactions)
-              missingFields.push("featured transactions");
             if (!parsedData.currentMonth) missingFields.push("month/year");
             if (!parsedData.history) missingFields.push("history");
 
@@ -103,7 +101,7 @@ export function DataManagement() {
               toast({
                 title: "Old File Format Detected",
                 description: `Missing: ${missingFields.join(
-                  ", "
+                  ", ",
                 )}. Defaults will be applied.`,
                 variant: "default",
               });

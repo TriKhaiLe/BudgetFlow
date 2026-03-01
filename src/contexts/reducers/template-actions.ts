@@ -1,4 +1,4 @@
-import type { BudgetState, TransactionTemplate } from '@/lib/types';
+import type { BudgetState, BudgetLogTemplate } from '@/lib/types';
 import { appendHistory } from './history-helpers';
 
 /**
@@ -9,20 +9,20 @@ function generateTemplateId(): string {
 }
 
 /**
- * Handles adding a new transaction template.
+ * Handles adding a new budget log template.
  */
 export function handleAddTemplate(
   state: BudgetState,
-  payload: Omit<TransactionTemplate, 'id'>
+  payload: Omit<BudgetLogTemplate, 'id'>
 ): BudgetState {
-  const newTemplate: TransactionTemplate = {
+  const newTemplate: BudgetLogTemplate = {
     ...payload,
     id: generateTemplateId(),
   };
 
   return {
     ...state,
-    transactionTemplates: [...state.transactionTemplates, newTemplate],
+    templates: [...state.templates, newTemplate],
     history: appendHistory(
       state.history,
       `Created template "${payload.name}"`
@@ -31,15 +31,15 @@ export function handleAddTemplate(
 }
 
 /**
- * Handles updating an existing transaction template.
+ * Handles updating an existing budget log template.
  */
 export function handleUpdateTemplate(
   state: BudgetState,
-  payload: TransactionTemplate
+  payload: BudgetLogTemplate
 ): BudgetState {
   return {
     ...state,
-    transactionTemplates: state.transactionTemplates.map((template) =>
+    templates: state.templates.map((template) =>
       template.id === payload.id ? payload : template
     ),
     history: appendHistory(
@@ -50,18 +50,18 @@ export function handleUpdateTemplate(
 }
 
 /**
- * Handles deleting a transaction template.
+ * Handles deleting a budget log template.
  */
 export function handleDeleteTemplate(
   state: BudgetState,
   templateId: string
 ): BudgetState {
-  const template = state.transactionTemplates.find((t) => t.id === templateId);
+  const template = state.templates.find((t) => t.id === templateId);
   const templateName = template?.name || 'Unknown';
 
   return {
     ...state,
-    transactionTemplates: state.transactionTemplates.filter(
+    templates: state.templates.filter(
       (t) => t.id !== templateId
     ),
     history: appendHistory(

@@ -6,13 +6,6 @@ export {
   handleAdjustBalance,
 } from './money-source-actions';
 export {
-  handleAddTransaction,
-  handleUpdateTransaction,
-  handleDeleteTransaction,
-  handleAddFeaturedTransaction,
-  handleDeleteFeaturedTransaction,
-} from './transaction-actions';
-export {
   handleAddTemplate,
   handleUpdateTemplate,
   handleDeleteTemplate,

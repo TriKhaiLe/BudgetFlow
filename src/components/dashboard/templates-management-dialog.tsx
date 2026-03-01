@@ -2,8 +2,8 @@
 
 import React from "react";
 import { useBudget } from "@/contexts/budget-context";
-import type { TransactionTemplate } from "@/lib/types";
-import { formatCurrency, getCategoryColor } from "@/lib/utils";
+import type { BudgetLogTemplate } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -23,22 +23,21 @@ import {
 } from "@/components/ui/dialog";
 import { FileText, Edit, Trash, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "../ui/badge";
 import { TemplateFormDialog } from "./templates-view";
 
 export function TemplatesManagementDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
   const [editingTemplate, setEditingTemplate] =
-    React.useState<TransactionTemplate | null>(null);
+    React.useState<BudgetLogTemplate | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
 
-  const handleDeleteTemplate = (template: TransactionTemplate) => {
+  const handleDeleteTemplate = (template: BudgetLogTemplate) => {
     if (
       confirm(
-        `Are you sure you want to delete the template "${template.name}"?`
+        `Are you sure you want to delete the template "${template.name}"?`,
       )
     ) {
       dispatch({ type: "DELETE_TEMPLATE", payload: template.id });
@@ -46,7 +45,7 @@ export function TemplatesManagementDialog() {
     }
   };
 
-  const handleEditTemplate = (template: TransactionTemplate) => {
+  const handleEditTemplate = (template: BudgetLogTemplate) => {
     setEditingTemplate(template);
     setIsEditDialogOpen(true);
   };
@@ -61,17 +60,16 @@ export function TemplatesManagementDialog() {
             className="gap-2 whitespace-nowrap flex-shrink-0"
           >
             <FileText className="h-4 w-4" />
-            <span className="md:hidden">Templates</span>
-            <span className="hidden md:inline">Templates</span>
+            <span>Templates</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="w-full max-w-[90vw] sm:max-w-4xl p-0 flex flex-col max-h-[90vh]">
           <DialogHeader className="px-4 pt-4 pb-2">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1">
-                <DialogTitle>Transaction Templates</DialogTitle>
+                <DialogTitle>Budget Entry Templates</DialogTitle>
                 <DialogDescription>
-                  Manage your reusable transaction templates for quick entry.
+                  Manage your reusable budget entry templates for quick entry.
                 </DialogDescription>
               </div>
               <Button
@@ -93,17 +91,19 @@ export function TemplatesManagementDialog() {
                   <TableHead className="hidden sm:table-cell">
                     Description
                   </TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="hidden sm:table-cell">Source</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  {state.moneySources.map((ms) => (
+                    <TableHead key={ms.id} className="text-right min-w-[80px]">
+                      {ms.name}
+                    </TableHead>
+                  ))}
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {state.transactionTemplates.length > 0 ? (
-                  state.transactionTemplates.map((template) => (
+                {state.templates.length > 0 ? (
+                  state.templates.map((template) => (
                     <TableRow key={template.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -112,39 +112,27 @@ export function TemplatesManagementDialog() {
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-muted-foreground">
-                        {template.description || "-"}
+                        {template.description || "—"}
                       </TableCell>
-                      <TableCell>
-                        {template.category ? (
-                          <Badge
-                            variant="outline"
-                            style={{
-                              backgroundColor: getCategoryColor(
-                                template.category
-                              ),
-                            }}
+                      {state.moneySources.map((ms) => {
+                        const change = template.changes[ms.id] || 0;
+                        return (
+                          <TableCell
+                            key={ms.id}
+                            className={`text-right text-sm ${
+                              change > 0
+                                ? "text-green-600 dark:text-green-400"
+                                : change < 0
+                                  ? "text-red-600 dark:text-red-400"
+                                  : "text-muted-foreground/40"
+                            }`}
                           >
-                            {template.category}
-                          </Badge>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        {state.moneySources.find(
-                          (ms) => ms.id === template.moneySourceId
-                        )?.name || "N/A"}
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-medium ${
-                          template.type === "income"
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {template.type === "income" ? "+" : "-"}
-                        {formatCurrency(template.amount)}
-                      </TableCell>
+                            {change === 0
+                              ? "—"
+                              : `${change > 0 ? "+" : ""}${formatCurrency(change)}`}
+                          </TableCell>
+                        );
+                      })}
                       <TableCell>
                         <div className="flex justify-end gap-1">
                           <Button
@@ -167,9 +155,11 @@ export function TemplatesManagementDialog() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No templates yet. Create one to speed up transaction
-                      entry.
+                    <TableCell
+                      colSpan={state.moneySources.length + 3}
+                      className="h-24 text-center"
+                    >
+                      No templates yet. Create one to speed up budget entry.
                     </TableCell>
                   </TableRow>
                 )}

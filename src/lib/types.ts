@@ -8,50 +8,15 @@ export interface MoneySource {
 }
 
 /**
- * Snapshot of budget and balance before and after a transaction.
+ * A template for quickly creating budget log entries.
+ * Stores preset delta values per money source.
  */
-export interface TransactionSnapshot {
-  budgetBefore: number;
-  budgetAfter: number;
-  balanceBefore: number;
-  balanceAfter: number;
-}
-
-export interface Transaction {
-  id: string;
-  description: string;
-  amount: number;
-  category: string;
-  date: string;
-  moneySourceId: string;
-  type: 'income' | 'withdraw' | 'transfer';
-  /** Target money source ID for transfer transactions */
-  targetMoneySourceId?: string;
-  /** Whether this transaction affected the balance (optional for backward compatibility) */
-  affectBalance?: boolean;
-  /** Snapshot of budget/balance before and after (optional for backward compatibility) */
-  snapshot?: TransactionSnapshot;
-}
-
-export interface FeaturedTransaction {
-  id:string;
-  description: string;
-  category: string;
-  amount: number;
-  date: string;
-}
-
-export interface TransactionTemplate {
+export interface BudgetLogTemplate {
   id: string;
   name: string;
   description: string;
-  amount: number;
-  category: string;
-  moneySourceId: string;
-  type: 'income' | 'withdraw' | 'transfer';
-  /** Target money source ID for transfer transactions */
-  targetMoneySourceId?: string;
-  affectBalance: boolean;
+  /** Preset delta changes per money source (key = moneySourceId) */
+  changes: Record<string, number>;
 }
 
 export interface HistoryLog {
@@ -85,9 +50,7 @@ export interface BudgetMetadata {
 
 export interface BudgetState {
   moneySources: MoneySource[];
-  transactions: Transaction[];
-  featuredTransactions: FeaturedTransaction[];
-  transactionTemplates: TransactionTemplate[];
+  templates: BudgetLogTemplate[];
   history: HistoryLog[];
   budgetLog: BudgetLogEntry[];
   /** Per-money-source lock: when locked, budget log entries won't affect current balance */

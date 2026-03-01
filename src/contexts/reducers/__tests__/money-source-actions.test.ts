@@ -28,21 +28,10 @@ describe('Money Source Actions', () => {
           balance: 1500,
         },
       ],
-      transactions: [
-        {
-          id: 'trans-1',
-          description: 'Groceries',
-          amount: 100,
-          category: 'Food',
-          date: '2025-12-01',
-          moneySourceId: 'source-1',
-          type: 'withdraw',
-        },
-      ],
-      featuredTransactions: [],
-      transactionTemplates: [],
+      templates: [],
       history: [],
       budgetLog: [],
+      budgetLogBalanceLocks: {},
       currentMonth: '2025-12',
     };
   });
@@ -116,12 +105,11 @@ describe('Money Source Actions', () => {
   });
 
   describe('handleDeleteMoneySource', () => {
-    it('should delete a money source and its transactions', () => {
+    it('should delete a money source', () => {
       const result = handleDeleteMoneySource(initialState, 'source-1');
 
       expect(result.moneySources).toHaveLength(1);
       expect(result.moneySources[0].id).toBe('source-2');
-      expect(result.transactions).toHaveLength(0); // Transaction with source-1 should be deleted
       expect(result.history).toHaveLength(1);
       expect(result.history[0].description).toContain('Deleted money source: Salary');
     });

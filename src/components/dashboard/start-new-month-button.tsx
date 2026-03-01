@@ -32,7 +32,7 @@ export function StartNewMonthButton() {
       title: "New Month Started",
       description: `Moved to ${format(
         nextMonth,
-        "MMMM yyyy"
+        "MMMM yyyy",
       )}. Current balances set as budget for new month.`,
     });
   };
@@ -63,9 +63,7 @@ export function StartNewMonthButton() {
               </li>
               <li>Use current balances as budget for new month</li>
               <li>Reset all spending to 0</li>
-              <li>
-                Clear all transactions, featured transactions, and history
-              </li>
+              <li>Clear history and start fresh budget log</li>
             </ul>
             <p className="text-sm text-muted-foreground mt-3">
               <strong>Note:</strong> Current balances will be logged to history
