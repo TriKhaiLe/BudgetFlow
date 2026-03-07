@@ -9,74 +9,74 @@ Use this when booting up the repo to regain context fast.
 - Data is stored client-side in localStorage only (key: `budgetFlowState`). No backend other than Genkit flows.
 - Scripts: `npm run dev` (Next), `npm run genkit:dev` (Genkit server via `src/ai/dev.ts`), `npm run genkit:watch` (hot reload flows), `npm run build`, `npm run lint`, `npm run typecheck`.
 - Env: `.env` must include `GEMINI_API_KEY`. Genkit loads env via `dotenv` inside `src/ai/dev.ts`.
+- Known issue: `npm run lint` fails with a circular JSON error in `.eslintrc.json` (React plugin circular reference). Pre-existing, not related to app code.
 
 ## App Flow (happy path)
 
 1. Run both dev servers (Next + Genkit). Open `http://localhost:9002`.
-2. Add money sources (wallet/bank) -> adds to state + history. State persists to localStorage automatically after init load.
-3. Add transactions (income/withdraw) under "Transactions" tab. Toggle `Update Balance` to decide whether the balance changes; both income and withdraw affect the budget, and optionally the balance per reducer logic.
-4. Use AI Assistant to describe a transaction; it returns `category:amount` (income positive, withdrawal negative). Confirm and choose a money source to add.
-5. Track featured (non-budget) transactions in separate tab. History tab shows logged actions.
-6. Export/Import via header Data Management (JSON). Strategies: `REPLACE` overwrites everything; `NEXT_MONTH` resets spending, sets budgets to previous balances, advances month.
+2. Add money sources (wallet/bank) → adds to state + history. State persists to localStorage automatically after init load.
+3. Initialize budget tracking → captures current budgets as the baseline entry.
+4. Add budget log entries with delta changes per money source (positive = income, negative = withdrawal). Each entry updates budget and balance (unless locked).
+5. Use AI Assistant to describe a budget change; it returns `category:amount`. Confirm and choose a money source to add as a budget log entry.
+6. Track activity via the "Budget Log" card (history of all app operations in reverse chronological order).
+7. Export/Import via header Data Management (JSON). Strategies: `REPLACE` overwrites everything; `NEXT_MONTH` resets spending, sets budgets to previous balances, advances month.
 
 ## State Model (src/contexts/budget-context.tsx)
 
-- `BudgetState`: `moneySources`, `transactions`, `featuredTransactions`, `transactionTemplates`, `history`, `budgetLog`, `currentMonth` (ISO, startOfMonth default).
-- Actions include `ADD/UPDATE/DELETE_MONEY_SOURCE`, `ADD/UPDATE/DELETE_TRANSACTION`, `ADD/DELETE_FEATURED_TRANSACTION`, `ADD/UPDATE/DELETE_TEMPLATE`, `INITIALIZE_BUDGET_LOG`, `ADD/DELETE/UPDATE_BUDGET_LOG_ENTRY`, `ADJUST_BALANCE`, `SET_CURRENT_MONTH`, `IMPORT_DATA` strategies, `SET_INITIAL_STATE`.
-- Transactions: income adds to budget and optionally to balance; withdraw subtracts from budget and optionally from balance; spent is always computed as budget - balance; delete reverses the transaction assuming it affected balance; update is shallow (does not rebalance) and logs a warning.
-- Templates: reusable transaction presets with `useCurrentDate` flag to auto-fill today's date when applied.
-- Migrations: on load, backfills `currentMonth`, coerces transaction types, ensures arrays exist (including `transactionTemplates`).
-- **Reducer Architecture (Refactored Dec 2025)**: Action handlers split into `src/contexts/reducers/` with separate files for money sources, transactions, templates, budget log, state, and history helpers.
+- `BudgetState`: `moneySources`, `templates` (BudgetLogTemplate[]), `history`, `budgetLog` (BudgetLogEntry[]), `budgetLogBalanceLocks?`, `currentMonth`, `monthDescription?`, `metadata?`.
+- Actions: `ADD/UPDATE/DELETE_MONEY_SOURCE`, `ADD/UPDATE/DELETE_TEMPLATE`, `INITIALIZE_BUDGET_LOG`, `ADD/DELETE/UPDATE_BUDGET_LOG_ENTRY`, `TOGGLE_BUDGET_LOG_BALANCE_LOCK`, `ADJUST_BALANCE`, `SET_CURRENT_MONTH`, `IMPORT_DATA`, `START_NEW_MONTH`, `UPDATE_MONTH_DESCRIPTION`, `SET_INITIAL_STATE`.
+- Budget log entries: delta changes per money source. Adding an entry: `budget += delta`, `balance += delta` (unless locked), `spent = budget - balance`. Deleting reverses the changes. Updating computes net change (newDelta - oldDelta) and applies it.
+- Balance locks: per-money-source toggle. When locked, budget log add/delete/update skip balance adjustments (budget still changes).
+- Templates: reusable budget log entry presets storing name, description, and preset delta values per money source.
+- Migrations: on load, `migrateState` ensures `budgetLog`, `templates`, `history` arrays exist; migrates old `transactionTemplates` to new `templates` format; deletes legacy `transactions`/`featuredTransactions`/`transactionTemplates` fields.
+- **Reducer Architecture**: Action handlers split into `src/contexts/reducers/` with separate files for money sources, templates, budget log, state, and history helpers.
 
-## Shared Code (Refactored Dec 2025)
+## Shared Code
 
-- **Constants** (`src/lib/constants.ts`): `CATEGORY_SUGGESTIONS`, `HISTORY_ICON_MAP`, `STORAGE_KEY`, `getHistoryIconConfig()`.
-- **Schemas** (`src/lib/schemas.ts`): Zod validation schemas: `moneySourceSchema`, `transactionSchema`, `featuredTransactionSchema`, `transactionTemplateSchema`, `updateBalanceSchema`, `aiAssistantSchema`.
+- **Constants** (`src/lib/constants.ts`): `HISTORY_ICON_MAP`, `STORAGE_KEY`, `getHistoryIconConfig()`, `IMPORT_STRATEGIES`.
+- **Schemas** (`src/lib/schemas.ts`): Zod validation schemas: `moneySourceSchema`, `updateBalanceSchema`, `aiAssistantSchema`, `positiveAmountSchema`, `nonNegativeAmountSchema`, `validNumberSchema`.
 - **Shared Components** (`src/components/shared/`):
-  - `FormattedInput` - reusable number input with comma formatting, quick-add buttons, and clear button.
-  - `ClearableInput` - text input wrapper with quick-delete (X) button that appears when input has value. Used for description/name fields.
-  - `ClearableTextarea` - textarea wrapper with quick-delete (X) button. Used for notes and AI description fields.
+  - `FormattedInput` — reusable number input with comma formatting, quick-add buttons, and clear button. Supports negative numbers.
+  - `ClearableInput` — text input wrapper with quick-delete (X) button.
+  - `ClearableTextarea` — textarea wrapper with quick-delete (X) button.
 
-## Transaction Templates (Added Dec 2025)
+## Budget Transactions (Budget Log) — Primary Feature
 
-- **Purpose**: Reusable presets for quick transaction entry. Templates store: name, description, amount, category, money source, type (income/withdraw), useCurrentDate flag, affectBalance flag.
-- **Components**: `src/components/dashboard/templates-view.tsx` contains `TemplatesView`, `TemplateFormDialog`, `AddTemplateButton`.
-- **Usage Flow**:
-  1. Create templates via Templates tab or from Add Transaction dialog
-  2. In Add Transaction dialog, click "Use Template" dropdown
-  3. Select template to auto-fill form fields
-  4. If `useCurrentDate` is true, date is set to today
-- **State**: Templates stored in `state.transactionTemplates`, persisted to localStorage.
-- **Reducer**: `template-actions.ts` handles `ADD_TEMPLATE`, `UPDATE_TEMPLATE`, `DELETE_TEMPLATE`.
-
-## Budget Log (Added Feb 2026)
-
-- **Purpose**: A vertical spreadsheet-like view that tracks how budget values change over time. Columns = money sources, rows = budget change entries.
+- **Purpose**: A vertical spreadsheet-like view tracking budget changes over time. Columns = money sources, rows = budget change entries.
 - **Data Model**: `BudgetLogEntry { id, description, changes: Record<moneySourceId, amount>, isInitial, createdAt }`. Stored in `state.budgetLog`.
 - **Flow**:
-  1. User clicks "Start Budget Tracking" to capture current budgets as the initial entry
-  2. Click "+" to add new entries with deltas per money source (positive = increase, negative = decrease)
-  3. Each entry updates actual money source budgets. Running totals are computed in the view.
-  4. When `handleStartNewMonth` runs, it auto-creates an initial entry with "Last month balance" from previous balances.
-- **Components**: `src/components/dashboard/budget-log-view.tsx` contains `BudgetLogView`, `AddBudgetLogEntryButton`.
-- **Reducer**: `budget-log-actions.ts` handles `INITIALIZE_BUDGET_LOG`, `ADD/DELETE/UPDATE_BUDGET_LOG_ENTRY`.
-- **Migration**: `migrateState` ensures `budgetLog: []` exists for backward compatibility.
+  1. User clicks "Start Budget Tracking" → captures current budgets as initial entry (isInitial=true, absolute values)
+  2. Click "New Entry" → popup dialog with description + delta amounts per money source
+  3. Each entry updates money source budgets and balances. Running totals are computed in the view via useMemo.
+  4. Table rows: Initial (gray), Entry (white, with edit/delete), Updated (dashed, running totals), New Entry button, Current Balance (blue, with lock toggles), Spent (red).
+  5. Click description to edit entry (popup), click timestamp to edit inline, trash icon to delete (confirmation dialog).
+  6. Lock/unlock icons toggle per-source balance locks.
+  7. "Edit Current Balances" dialog for direct balance adjustment with auto-entry creation.
+- **Components**: `src/components/dashboard/budget-log-view.tsx` — `BudgetLogView`, `AddEntryDialog`, `EditCurrentBalancesDialog`, `InitializeBudgetLogPrompt`, `BudgetLogTable`.
+- **Reducer**: `budget-log-actions.ts` — `handleInitializeBudgetLog`, `handleAddBudgetLogEntry`, `handleDeleteBudgetLogEntry`, `handleUpdateBudgetLogEntry`, `handleToggleBudgetLogBalanceLock`.
+
+## Budget Entry Templates
+
+- **Purpose**: Reusable presets for quick budget log entry creation. Each template stores: name, description, and preset delta values per money source.
+- **Components**: `src/components/dashboard/templates-view.tsx` — `TemplatesView`, `TemplateFormDialog`, `AddTemplateButton`. Accessed via `TemplatesManagementDialog` in the dashboard header.
+- **State**: Templates stored in `state.templates`, persisted to localStorage.
+- **Reducer**: `template-actions.ts` handles `ADD_TEMPLATE`, `UPDATE_TEMPLATE`, `DELETE_TEMPLATE`.
 
 ## AI Flows (src/ai)
 
 - Config (`genkit.ts`): `googleai/gemini-2.5-flash` with Google plugin.
-- `ai-assisted-budget-updates`: input `description`; output string in `category:amount` format (withdrawal negative). Used by AI Assistant dialog.
-- `suggest-transaction-categories`: input `description`; output `categories: string[]`. Not yet wired into UI.
+- `ai-assisted-budget-updates`: input `description`; output string in `category:amount` format (withdrawal negative). Used by AI Assistant dialog (dispatches `ADD_BUDGET_LOG_ENTRY`).
+- `suggest-transaction-categories`: input `description`; output `categories: string[]`. Legacy flow, not currently used by any UI component.
 - Dev entry (`dev.ts`): loads dotenv, registers both flows.
 
 ## UI Landmarks
 
-- `src/app/page.tsx`: wraps dashboard in `BudgetProvider`; sections: Budget Log, Budget Transactions, Money Sources, Budget Summary, Analytics, Month Notes. Add buttons for Transactions, Money Sources, and Budget Log entries are in the CollapsibleCard headers.
-- Header: `dashboard-header.tsx` exposes AI Assistant, Import/Export, Help, Month selector. Mobile sidebar includes DialogTitle for accessibility.
-- CollapsibleCard: `collapsible-card.tsx` supports optional `action` prop for header buttons (e.g., Add buttons). Clicking action buttons won't trigger collapse/expand.
-- Dialogs: All dialog components (Add Transaction, Money Source, AI Assistant, etc.) use scrollable containers with `max-h-[90vh]` and `overflow-y-auto` on content areas to prevent overflow on small screens. Header and footer remain fixed while body scrolls.
+- `src/app/page.tsx`: wraps dashboard in `BudgetProvider`; sections: Budget Transactions (BudgetLogView), Budget Log (HistoryView), Money Sources, Budget Summary, Analytics, Month Notes.
+- Header: `dashboard-header.tsx` — AI Assistant, Templates Management, Import/Export, Help, Month selector. Mobile sidebar includes DialogTitle for accessibility.
+- CollapsibleCard: `collapsible-card.tsx` — optional `action` prop for header buttons. Clicking action buttons won't trigger collapse/expand.
+- Dialogs: All dialog components use scrollable containers with `max-h-[90vh]` and `overflow-y-auto` on content areas.
 - Analytics: collapsible bar chart showing spent amount per money source.
-- Budget Month Selector: month/year dropdown that dispatches `SET_CURRENT_MONTH` (also logs to history).
+- Budget Month Selector: month/year dropdown that dispatches `SET_CURRENT_MONTH`.
 - Data Management: JSON import/export; shows strategy dialog before import.
 - Help Dialog: quick usage guide baked into UI.
 
