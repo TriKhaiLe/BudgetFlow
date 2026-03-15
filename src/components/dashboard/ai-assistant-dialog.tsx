@@ -40,7 +40,7 @@ import { Badge } from "../ui/badge";
 const aiSchema = z.object({
   description: z
     .string()
-    .min(10, "Please describe your transaction in more detail."),
+    .min(10, "Please describe your budget change in more detail."),
 });
 
 type AiSuggestion = {
@@ -147,8 +147,9 @@ export function AIAssistantDialog() {
         <DialogHeader className="px-4 pt-4">
           <DialogTitle>AI Assistant</DialogTitle>
           <DialogDescription>
-            Describe a transaction in plain English. For example: "I just bought
-            groceries for $78.34" or "Paycheck of $1500 came in".
+            Describe a budget change in plain English. The AI will parse it
+            into a budget log entry. For example: "I bought groceries for
+            $78.34" or "Received salary of $1500".
           </DialogDescription>
         </DialogHeader>
         <div className="overflow-y-auto px-4 max-h-[calc(90vh-180px)]">
@@ -163,7 +164,7 @@ export function AIAssistantDialog() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Transaction Description</FormLabel>
+                      <FormLabel>Budget Change Description</FormLabel>
                       <FormControl>
                         <ClearableTextarea
                           placeholder="Type here..."

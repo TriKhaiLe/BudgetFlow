@@ -63,7 +63,7 @@ export type UpdateBalanceFormValues = z.infer<typeof updateBalanceSchema>;
  * Schema for AI assistant form validation.
  */
 export const aiAssistantSchema = z.object({
-  description: z.string().min(10, 'Please describe your transaction in more detail.'),
+  description: z.string().min(10, 'Please describe your budget change in more detail.'),
 });
 
 export type AiAssistantFormValues = z.infer<typeof aiAssistantSchema>;

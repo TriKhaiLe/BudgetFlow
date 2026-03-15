@@ -65,9 +65,8 @@ Use this when booting up the repo to regain context fast.
 ## AI Flows (src/ai)
 
 - Config (`genkit.ts`): `googleai/gemini-2.5-flash` with Google plugin.
-- `ai-assisted-budget-updates`: input `description`; output string in `category:amount` format (withdrawal negative). Used by AI Assistant dialog (dispatches `ADD_BUDGET_LOG_ENTRY`).
-- `suggest-transaction-categories`: input `description`; output `categories: string[]`. Legacy flow, not currently used by any UI component.
-- Dev entry (`dev.ts`): loads dotenv, registers both flows.
+- `ai-assisted-budget-updates`: input `description`; output string in `category:amount` format (withdrawal negative). Used by AI Assistant dialog (dispatches `ADD_BUDGET_LOG_ENTRY` with `[AI]` prefix).
+- Dev entry (`dev.ts`): loads dotenv, registers the flow.
 
 ## UI Landmarks
 

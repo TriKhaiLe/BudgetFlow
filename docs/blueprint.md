@@ -8,12 +8,27 @@
 - Budget Entry Templates: Reusable presets for quickly creating budget log entries. Each template stores a name, description, and preset delta values per money source. Managed via a dialog accessible from the dashboard header.
 - Transaction History (Budget Log): Automatically logs all budget or balance operations (money source changes, budget log entries, template operations, data imports, month transitions, etc.) with timestamps and icons in reverse chronological order.
 - Data Import/Export: Allow users to export current budget to JSON for saving and share with friends. Provide two importing strategies to re-hydrate all the existing entries or load for creating budgets of subsequent month.
-- AI Assistant: Chat interface where users can describe budget changes, and the AI will suggest and automatically apply the appropriate updates within the application, acting as an application agent.
+- AI Assistant: Chat interface where users can describe budget changes in plain English, and the AI will parse them into budget log entries. The AI determines the category and amount (income vs. expense), then the user selects which money source to apply it to. The entry is added to the Budget Transactions table with an `[AI]` prefix.
+
+### AI Assistant Use Cases:
+
+| Use Case | Example Input | AI Output | Result |
+|----------|---------------|-----------|--------|
+| Log an expense | "I bought groceries for $78.34" | `groceries:-78.34` | -$78.34 applied to selected source |
+| Record income | "Received salary of $3000" | `income:3000` | +$3,000 applied to selected source |
+| Log a withdrawal | "ATM withdrawal of $200" | `withdrawal:-200` | -$200 applied to selected source |
+| Track a payment | "Paid electricity bill $120.50" | `utilities:-120.50` | -$120.50 applied to selected source |
+| Record earnings | "Freelance payment of $500 received" | `freelance:500` | +$500 applied to selected source |
+| Log dining expense | "Dinner with friends cost $65" | `dining:-65` | -$65 applied to selected source |
+| Track subscription | "Netflix monthly subscription $15.99" | `entertainment:-15.99` | -$15.99 applied to selected source |
+| Log transfer context | "Sent rent payment $1200" | `housing:-1200` | -$1,200 applied to selected source |
+
+**Flow**: User describes change → AI returns `category:amount` → User reviews suggestion (type, category, amount) → User selects money source → Confirm & Add → Budget log entry created with `[AI]` prefix.
 
 ### Deprecated Features (removed):
 - ~~Budget Impact Transactions~~: Replaced by Budget Transactions (Budget Log) system above.
 - ~~Featured Transactions~~: Removed. Budget log entries now serve as the sole tracking mechanism.
-- ~~Category Suggestions~~: The AI flow (`suggest-transaction-categories.ts`) still exists in the codebase but is no longer used by any UI component since transactions were removed.
+- ~~Category Suggestions~~: AI flow removed (`suggest-transaction-categories.ts` deleted). Was unused since transactions were removed.
 
 ## Style Guidelines:
 
