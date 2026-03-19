@@ -15,9 +15,21 @@ export function handleAddMoneySource(
     spent: payload.budget - payload.balance,
   };
 
+  const hasInitialBudgetLog = state.budgetLog.some((entry) => entry.isInitial);
+  const addSourceEntry = hasInitialBudgetLog
+    ? {
+        id: crypto.randomUUID(),
+        description: `Add money source: ${newSource.name}`,
+        changes: { [newSource.id]: payload.budget },
+        isInitial: false,
+        createdAt: new Date().toISOString(),
+      }
+    : null;
+
   return {
     ...state,
     moneySources: [...state.moneySources, newSource],
+    budgetLog: addSourceEntry ? [...state.budgetLog, addSourceEntry] : state.budgetLog,
     history: appendHistory(state.history, `Created money source: ${newSource.name}`),
   };
 }

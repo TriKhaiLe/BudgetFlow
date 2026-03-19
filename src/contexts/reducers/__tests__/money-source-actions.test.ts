@@ -69,6 +69,54 @@ describe('Money Source Actions', () => {
 
       expect(initialState.moneySources).toHaveLength(2);
     });
+
+    it('should append a budget log entry when budget log is initialized', () => {
+      const stateWithInitialLog: BudgetState = {
+        ...initialState,
+        budgetLog: [
+          {
+            id: 'initial-log',
+            description: 'Initial budget',
+            changes: {
+              'source-1': 5000,
+              'source-2': 2000,
+            },
+            isInitial: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      };
+
+      const payload = {
+        name: 'Cash',
+        budget: 3000,
+        balance: 2500,
+      };
+
+      const result = handleAddMoneySource(stateWithInitialLog, payload);
+      const addedSource = result.moneySources[result.moneySources.length - 1];
+      const appendedLog = result.budgetLog[result.budgetLog.length - 1];
+
+      expect(result.budgetLog).toHaveLength(2);
+      expect(appendedLog.isInitial).toBe(false);
+      expect(appendedLog.description).toBe('Add money source: Cash');
+      expect(appendedLog.changes[addedSource.id]).toBe(3000);
+      expect(addedSource.budget).toBe(3000);
+      expect(addedSource.balance).toBe(2500);
+      expect(addedSource.spent).toBe(500);
+    });
+
+    it('should not append budget log entry if budget log is not initialized', () => {
+      const payload = {
+        name: 'Cash',
+        budget: 3000,
+        balance: 2500,
+      };
+
+      const result = handleAddMoneySource(initialState, payload);
+
+      expect(result.budgetLog).toHaveLength(0);
+    });
   });
 
   describe('handleUpdateMoneySource', () => {
