@@ -609,7 +609,7 @@ function BudgetLogTable() {
                     {moneySources.map((ms) => (
                       <TableCell
                         key={ms.id}
-                        className="text-right font-semibold text-primary"
+                        className="text-right font-medium text-primary"
                       >
                         {formatCurrency(row.totals[ms.id] || 0)}
                       </TableCell>
@@ -733,7 +733,7 @@ function BudgetLogTable() {
                     {moneySources.map((ms) => (
                       <TableCell
                         key={ms.id}
-                        className="text-right font-bold text-primary"
+                        className="text-right font-semibold text-primary"
                       >
                         {formatCurrency(row.totals[ms.id] || 0)}
                       </TableCell>
