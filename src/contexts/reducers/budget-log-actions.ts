@@ -67,9 +67,13 @@ export function handleInitializeBudgetLog(
  */
 export function handleAddBudgetLogEntry(
   state: BudgetState,
-  payload: { description: string; changes: Record<string, number> }
+  payload: {
+    description: string;
+    changes: Record<string, number>;
+    createdAt?: string;
+  }
 ): BudgetState {
-  const { description, changes } = payload;
+  const { description, changes, createdAt } = payload;
   const locks = state.budgetLogBalanceLocks || {};
 
   const newEntry: BudgetLogEntry = {
@@ -77,7 +81,7 @@ export function handleAddBudgetLogEntry(
     description,
     changes,
     isInitial: false,
-    createdAt: new Date().toISOString(),
+    createdAt: createdAt || new Date().toISOString(),
   };
 
   // Build a readable summary of changes

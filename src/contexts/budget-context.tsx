@@ -53,7 +53,11 @@ type Action =
   | { type: "INITIALIZE_BUDGET_LOG"; payload: string }
   | {
       type: "ADD_BUDGET_LOG_ENTRY";
-      payload: { description: string; changes: Record<string, number> };
+      payload: {
+        description: string;
+        changes: Record<string, number>;
+        createdAt?: string;
+      };
     }
   | { type: "DELETE_BUDGET_LOG_ENTRY"; payload: string }
   | {

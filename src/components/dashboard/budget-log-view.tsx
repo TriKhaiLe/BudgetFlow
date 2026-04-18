@@ -54,7 +54,24 @@ function formatTimestamp(iso: string): string {
 
 interface EntryFormState {
   description: string;
+  createdAt: string;
   changes: Record<string, string>;
+}
+
+function toDateTimeLocalValue(iso?: string): string {
+  try {
+    return format(iso ? new Date(iso) : new Date(), "yyyy-MM-dd'T'HH:mm");
+  } catch {
+    return format(new Date(), "yyyy-MM-dd'T'HH:mm");
+  }
+}
+
+function toIsoFromDateTimeLocal(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return new Date().toISOString();
+  }
+  return parsed.toISOString();
 }
 
 function AddEntryDialog({
@@ -81,6 +98,7 @@ function AddEntryDialog({
 
   const initialFormState: EntryFormState = {
     description: entry?.description || "",
+    createdAt: toDateTimeLocalValue(entry?.createdAt),
     changes: Object.fromEntries(
       state.moneySources.map((ms) => [
         ms.id,
@@ -98,6 +116,7 @@ function AddEntryDialog({
     if (open && entry) {
       setForm({
         description: entry.description || "",
+        createdAt: toDateTimeLocalValue(entry.createdAt),
         changes: Object.fromEntries(
           state.moneySources.map((ms) => [
             ms.id,
@@ -114,6 +133,7 @@ function AddEntryDialog({
   const resetForm = () => {
     setForm({
       description: "",
+      createdAt: toDateTimeLocalValue(),
       changes: Object.fromEntries(state.moneySources.map((ms) => [ms.id, ""])),
     });
   };
@@ -126,6 +146,9 @@ function AddEntryDialog({
     }
     if (newOpen && entry) {
       setForm(initialFormState);
+    }
+    if (newOpen && !entry) {
+      resetForm();
     }
   };
 
@@ -159,16 +182,23 @@ function AddEntryDialog({
       return;
     }
 
+    const createdAt = toIsoFromDateTimeLocal(form.createdAt);
+
     if (isEditing && entry) {
       dispatch({
         type: "UPDATE_BUDGET_LOG_ENTRY",
-        payload: { id: entry.id, description: form.description, changes },
+        payload: {
+          id: entry.id,
+          description: form.description,
+          changes,
+          createdAt,
+        },
       });
       toast({ title: "Success", description: "Budget log entry updated." });
     } else {
       dispatch({
         type: "ADD_BUDGET_LOG_ENTRY",
-        payload: { description: form.description, changes },
+        payload: { description: form.description, changes, createdAt },
       });
       toast({ title: "Success", description: "Budget log entry added." });
     }
@@ -226,6 +256,19 @@ function AddEntryDialog({
                   ...prev,
                   description: (e.target as HTMLInputElement).value,
                 }))
+              }
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="entry-created-at">Transaction Date</Label>
+            <Input
+              id="entry-created-at"
+              type="datetime-local"
+              value={form.createdAt}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, createdAt: e.target.value }))
               }
               className="mt-1"
             />
