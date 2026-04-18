@@ -2,6 +2,20 @@ import type { BudgetState, BudgetLogEntry } from '@/lib/types';
 import { appendHistory } from './history-helpers';
 import { formatCurrency } from '@/lib/utils';
 
+function getTimestamp(iso: string): number {
+  const time = new Date(iso).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function sortBudgetLogEntries(entries: BudgetLogEntry[]): BudgetLogEntry[] {
+  const initialEntries = entries.filter((entry) => entry.isInitial);
+  const nonInitialEntries = entries
+    .filter((entry) => !entry.isInitial)
+    .sort((a, b) => getTimestamp(a.createdAt) - getTimestamp(b.createdAt));
+
+  return [...initialEntries, ...nonInitialEntries];
+}
+
 /**
  * Handles toggling the balance lock for a specific money source in the budget log.
  * When locked, budget log entries won't affect the current balance for that money source.
@@ -95,7 +109,7 @@ export function handleAddBudgetLogEntry(
 
   return {
     ...state,
-    budgetLog: [...state.budgetLog, newEntry],
+    budgetLog: sortBudgetLogEntries([...state.budgetLog, newEntry]),
     moneySources: state.moneySources.map((ms) => {
       const delta = changes[ms.id];
       if (!delta) return ms;
@@ -195,7 +209,9 @@ export function handleUpdateBudgetLogEntry(
 
   return {
     ...state,
-    budgetLog: state.budgetLog.map((e) => (e.id === id ? updatedEntry : e)),
+    budgetLog: sortBudgetLogEntries(
+      state.budgetLog.map((e) => (e.id === id ? updatedEntry : e))
+    ),
     moneySources: updatedMoneySources,
     history: appendHistory(
       state.history,
