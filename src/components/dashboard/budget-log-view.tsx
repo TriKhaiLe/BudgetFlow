@@ -51,6 +51,24 @@ function formatTimestamp(iso: string): string {
   }
 }
 
+function getEntryTimestamp(iso: string): number {
+  const time = new Date(iso).getTime();
+  return Number.isNaN(time) ? 0 : time;
+}
+
+function sortBudgetEntriesForDisplay(
+  entries: BudgetLogEntry[],
+): BudgetLogEntry[] {
+  const initialEntries = entries.filter((entry) => entry.isInitial);
+  const nonInitialEntries = entries
+    .filter((entry) => !entry.isInitial)
+    .sort(
+      (a, b) => getEntryTimestamp(a.createdAt) - getEntryTimestamp(b.createdAt),
+    );
+
+  return [...initialEntries, ...nonInitialEntries];
+}
+
 // ─── Add/Edit Entry Dialog (popup, reverted from inline) ─────────────────────
 
 interface EntryFormState {
@@ -516,6 +534,11 @@ function BudgetLogTable() {
   const { moneySources, budgetLog } = state;
   const locks = state.budgetLogBalanceLocks || {};
 
+  const sortedBudgetLog = useMemo(
+    () => sortBudgetEntriesForDisplay(budgetLog),
+    [budgetLog],
+  );
+
   // Entry pending deletion (for confirmation)
   const [pendingDelete, setPendingDelete] = useState<BudgetLogEntry | null>(
     null,
@@ -534,8 +557,8 @@ function BudgetLogTable() {
 
     const runningTotals: Record<string, number> = {};
 
-    for (let i = 0; i < budgetLog.length; i++) {
-      const entry = budgetLog[i];
+    for (let i = 0; i < sortedBudgetLog.length; i++) {
+      const entry = sortedBudgetLog[i];
 
       if (entry.isInitial) {
         moneySources.forEach((ms) => {
@@ -560,13 +583,14 @@ function BudgetLogTable() {
 
         result.push({
           type: "result",
+          entry,
           totals: { ...runningTotals },
         });
       }
     }
 
     return result;
-  }, [budgetLog, moneySources]);
+  }, [moneySources, sortedBudgetLog]);
 
   const handleDeleteEntry = (entry: BudgetLogEntry) => {
     setPendingDelete(entry);
@@ -765,7 +789,7 @@ function BudgetLogTable() {
               if (row.type === "result") {
                 return (
                   <TableRow
-                    key={`result-${idx}`}
+                    key={`result-${row.entry?.id || idx}`}
                     className="border-t-2 border-dashed bg-muted/20"
                   >
                     <TableCell />
