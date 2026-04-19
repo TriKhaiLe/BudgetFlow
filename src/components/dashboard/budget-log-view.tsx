@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { BudgetLogEntry } from "@/lib/types";
 import { formatNumberWithCommas } from "@/lib/utils";
 import { format } from "date-fns";
+import { BudgetLogSnapshotActions } from "./budget-log-snapshot-dialog";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -925,5 +926,5 @@ export default function BudgetLogView() {
  * The add button is now inside the table, so this returns null.
  */
 export function AddBudgetLogEntryButton() {
-  return null;
+  return <BudgetLogSnapshotActions />;
 }

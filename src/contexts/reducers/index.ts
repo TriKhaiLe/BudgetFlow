@@ -16,6 +16,7 @@ export {
   handleDeleteBudgetLogEntry,
   handleUpdateBudgetLogEntry,
   handleToggleBudgetLogBalanceLock,
+  handleSaveBudgetLogSnapshot,
 } from './budget-log-actions';
 export {
   initialBudgetState,

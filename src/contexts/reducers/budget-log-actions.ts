@@ -1,4 +1,4 @@
-import type { BudgetState, BudgetLogEntry } from '@/lib/types';
+import type { BudgetState, BudgetLogEntry, BudgetLogSnapshot } from '@/lib/types';
 import { appendHistory } from './history-helpers';
 import { formatCurrency } from '@/lib/utils';
 
@@ -216,6 +216,32 @@ export function handleUpdateBudgetLogEntry(
     history: appendHistory(
       state.history,
       `Updated budget log entry: ${description || 'Untitled'}`
+    ),
+  };
+}
+
+/**
+ * Saves a snapshot of the current budget log for later auditing.
+ */
+export function handleSaveBudgetLogSnapshot(state: BudgetState): BudgetState {
+  const snapshotEntries: BudgetLogEntry[] = state.budgetLog.map((entry) => ({
+    ...entry,
+    changes: { ...entry.changes },
+  }));
+
+  const snapshot: BudgetLogSnapshot = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    entryCount: snapshotEntries.length,
+    entries: snapshotEntries,
+  };
+
+  return {
+    ...state,
+    budgetLogSnapshot: snapshot,
+    history: appendHistory(
+      state.history,
+      `Saved budget log snapshot (${snapshot.entryCount} entries)`
     ),
   };
 }

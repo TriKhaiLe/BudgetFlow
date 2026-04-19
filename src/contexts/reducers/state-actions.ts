@@ -11,6 +11,7 @@ export const initialBudgetState: BudgetState = {
   templates: [],
   history: [],
   budgetLog: [],
+  budgetLogSnapshot: null,
   budgetLogBalanceLocks: {},
   currentMonth: startOfMonth(new Date()).toISOString(),
   monthDescription: '',
@@ -180,6 +181,31 @@ export function migrateState(parsedState: BudgetState): BudgetState {
   if (!parsedState.budgetLog) {
     (parsedState as any).budgetLog = [];
     warnings.push('Missing budgetLog');
+  }
+
+  // Ensure budgetLogSnapshot exists and has compatible shape
+  if (parsedState.budgetLogSnapshot === undefined) {
+    parsedState.budgetLogSnapshot = null;
+  } else if (parsedState.budgetLogSnapshot) {
+    const snapshot = parsedState.budgetLogSnapshot as any;
+    const hasValidEntries = Array.isArray(snapshot.entries);
+    if (!hasValidEntries) {
+      parsedState.budgetLogSnapshot = null;
+      warnings.push('Invalid budgetLogSnapshot reset');
+    } else {
+      parsedState.budgetLogSnapshot = {
+        id: typeof snapshot.id === 'string' ? snapshot.id : crypto.randomUUID(),
+        createdAt:
+          typeof snapshot.createdAt === 'string'
+            ? snapshot.createdAt
+            : new Date().toISOString(),
+        entryCount:
+          typeof snapshot.entryCount === 'number'
+            ? snapshot.entryCount
+            : snapshot.entries.length,
+        entries: snapshot.entries,
+      };
+    }
   }
 
   // Ensure budgetLogBalanceLocks exists

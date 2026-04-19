@@ -28,6 +28,7 @@ import {
   handleDeleteBudgetLogEntry,
   handleUpdateBudgetLogEntry,
   handleToggleBudgetLogBalanceLock,
+  handleSaveBudgetLogSnapshot,
   migrateState,
 } from "./reducers";
 
@@ -69,7 +70,8 @@ type Action =
         createdAt?: string;
       };
     }
-  | { type: "TOGGLE_BUDGET_LOG_BALANCE_LOCK"; payload: string };
+  | { type: "TOGGLE_BUDGET_LOG_BALANCE_LOCK"; payload: string }
+  | { type: "SAVE_BUDGET_LOG_SNAPSHOT" };
 
 /**
  * Budget reducer - handles all state mutations.
@@ -127,6 +129,9 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
 
     case "TOGGLE_BUDGET_LOG_BALANCE_LOCK":
       return handleToggleBudgetLogBalanceLock(state, action.payload);
+
+    case "SAVE_BUDGET_LOG_SNAPSHOT":
+      return handleSaveBudgetLogSnapshot(state);
 
     default:
       return state;

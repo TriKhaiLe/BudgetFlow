@@ -40,6 +40,13 @@ export interface BudgetLogEntry {
   createdAt: string;
 }
 
+export interface BudgetLogSnapshot {
+  id: string;
+  createdAt: string;
+  entryCount: number;
+  entries: BudgetLogEntry[];
+}
+
 export interface BudgetMetadata {
   exportDate: string;
   month: number;
@@ -53,6 +60,7 @@ export interface BudgetState {
   templates: BudgetLogTemplate[];
   history: HistoryLog[];
   budgetLog: BudgetLogEntry[];
+  budgetLogSnapshot?: BudgetLogSnapshot | null;
   /** Per-money-source lock: when locked, budget log entries won't affect current balance */
   budgetLogBalanceLocks?: Record<string, boolean>;
   currentMonth: string;

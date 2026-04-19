@@ -4,6 +4,7 @@ import {
   handleDeleteBudgetLogEntry,
   handleUpdateBudgetLogEntry,
   handleToggleBudgetLogBalanceLock,
+  handleSaveBudgetLogSnapshot,
 } from '../budget-log-actions';
 import type { BudgetState } from '@/lib/types';
 
@@ -559,6 +560,38 @@ describe('Budget Log Actions', () => {
       expect(result.moneySources[1].budget).toBe(2000000);
       // source-3: new -500000 → 3500000
       expect(result.moneySources[2].budget).toBe(3500000);
+    });
+  });
+
+  // ─── handleSaveBudgetLogSnapshot ────────────────────────────────
+
+  describe('handleSaveBudgetLogSnapshot', () => {
+    it('should save a snapshot containing deep-copied budget log entries', () => {
+      let state = handleInitializeBudgetLog(initialState, 'Initial budget');
+      state = handleAddBudgetLogEntry(state, {
+        description: 'Transfer',
+        changes: { 'source-1': -200000, 'source-2': 200000 },
+      });
+
+      const result = handleSaveBudgetLogSnapshot(state);
+
+      expect(result.budgetLogSnapshot).toBeTruthy();
+      expect(result.budgetLogSnapshot!.entryCount).toBe(2);
+      expect(result.budgetLogSnapshot!.entries).toHaveLength(2);
+      expect(result.budgetLogSnapshot!.entries[1].description).toBe('Transfer');
+      expect(result.budgetLogSnapshot!.entries[1]).not.toBe(state.budgetLog[1]);
+      expect(result.budgetLogSnapshot!.entries[1].changes).not.toBe(
+        state.budgetLog[1].changes,
+      );
+    });
+
+    it('should append a history record when snapshot is saved', () => {
+      const withInitial = handleInitializeBudgetLog(initialState, 'Initial budget');
+      const result = handleSaveBudgetLogSnapshot(withInitial);
+
+      const lastHistory = result.history[result.history.length - 1];
+      expect(lastHistory.description).toContain('Saved budget log snapshot');
+      expect(lastHistory.description).toContain('1 entries');
     });
   });
 
