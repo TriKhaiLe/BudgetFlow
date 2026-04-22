@@ -224,15 +224,17 @@ export function BudgetLogSnapshotActions() {
   }, [diffRows]);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2">
       <Button
         variant="outline"
         size="sm"
-        className="gap-2 whitespace-nowrap flex-shrink-0"
+        className="gap-2 whitespace-nowrap flex-shrink-0 px-2 sm:px-3"
         onClick={handleSaveSnapshot}
+        title="Save Snapshot"
       >
         <Camera className="h-4 w-4" />
-        <span>Save Snapshot</span>
+        <span className="hidden sm:inline">Save Snapshot</span>
+        <span className="sr-only sm:hidden">Save Snapshot</span>
       </Button>
 
       <Dialog>
@@ -240,10 +242,12 @@ export function BudgetLogSnapshotActions() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 whitespace-nowrap flex-shrink-0"
+            className="gap-2 whitespace-nowrap flex-shrink-0 px-2 sm:px-3"
+            title="Compare Snapshot"
           >
             <FileText className="h-4 w-4" />
-            <span>Compare Snapshot</span>
+            <span className="hidden sm:inline">Compare Snapshot</span>
+            <span className="sr-only sm:hidden">Compare Snapshot</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="w-full max-w-[95vw] sm:max-w-5xl p-0 flex flex-col max-h-[90vh]">
