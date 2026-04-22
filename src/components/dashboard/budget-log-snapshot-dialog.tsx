@@ -9,6 +9,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -92,11 +102,12 @@ function statusLabel(status: DiffStatus): string {
 export function BudgetLogSnapshotActions() {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
+  const [isSaveConfirmOpen, setIsSaveConfirmOpen] = React.useState(false);
 
   const snapshot = state.budgetLogSnapshot;
   const currentEntries = state.budgetLog;
 
-  const handleSaveSnapshot = () => {
+  const handleOpenSaveConfirm = () => {
     if (currentEntries.length === 0) {
       toast({
         title: "Nothing to snapshot",
@@ -106,11 +117,16 @@ export function BudgetLogSnapshotActions() {
       return;
     }
 
+    setIsSaveConfirmOpen(true);
+  };
+
+  const handleConfirmSaveSnapshot = () => {
     dispatch({ type: "SAVE_BUDGET_LOG_SNAPSHOT" });
     toast({
       title: "Snapshot saved",
       description: `Captured ${currentEntries.length} budget transaction entries.`,
     });
+    setIsSaveConfirmOpen(false);
   };
 
   const diffRows = React.useMemo<DiffRow[]>(() => {
@@ -229,13 +245,31 @@ export function BudgetLogSnapshotActions() {
         variant="outline"
         size="sm"
         className="gap-2 whitespace-nowrap flex-shrink-0 px-2 sm:px-3"
-        onClick={handleSaveSnapshot}
+        onClick={handleOpenSaveConfirm}
         title="Save Snapshot"
       >
         <Camera className="h-4 w-4" />
         <span className="hidden sm:inline">Save Snapshot</span>
         <span className="sr-only sm:hidden">Save Snapshot</span>
       </Button>
+
+      <AlertDialog open={isSaveConfirmOpen} onOpenChange={setIsSaveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Budget Snapshot?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will overwrite the previous snapshot with the current Budget
+              Transactions data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSaveSnapshot}>
+              Save Snapshot
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog>
         <DialogTrigger asChild>
