@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState } from "react";
 import { useBudget } from "@/contexts/budget-context";
 import { formatCurrency, parseFormattedNumber } from "@/lib/utils";
 import { FormattedInput, ClearableInput } from "@/components/shared";
@@ -332,35 +332,13 @@ function AddEntryDialog({
 
 function EditCurrentBalancesDialog({
   children,
-  onAutoEntry,
 }: {
   children: React.ReactNode;
-  onAutoEntry?: () => void;
 }) {
   const { state, dispatch } = useBudget();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [balances, setBalances] = useState<Record<string, string>>({});
-
-  // Compute latest Updated totals for auto-entry (Task 8)
-  const latestUpdatedTotals = useMemo(() => {
-    const totals: Record<string, number> = {};
-    state.moneySources.forEach((ms) => {
-      totals[ms.id] = 0;
-    });
-    for (const entry of state.budgetLog) {
-      if (entry.isInitial) {
-        state.moneySources.forEach((ms) => {
-          totals[ms.id] = entry.changes[ms.id] || 0;
-        });
-      } else {
-        state.moneySources.forEach((ms) => {
-          totals[ms.id] = (totals[ms.id] || 0) + (entry.changes[ms.id] || 0);
-        });
-      }
-    }
-    return totals;
-  }, [state.budgetLog, state.moneySources]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -387,30 +365,6 @@ function EditCurrentBalancesDialog({
   };
 
   const handleSubmit = () => {
-    // Task 8: Auto-add budget log entry if new balance > latest Updated
-    const autoChanges: Record<string, number> = {};
-    let hasAutoChange = false;
-
-    for (const ms of state.moneySources) {
-      const parsed = parseFormattedNumber(balances[ms.id] || "");
-      const newBal = isNaN(parsed) ? ms.balance : parsed;
-      const latestUpdated = latestUpdatedTotals[ms.id] || 0;
-      if (newBal > latestUpdated) {
-        autoChanges[ms.id] = newBal - latestUpdated;
-        hasAutoChange = true;
-      }
-    }
-
-    if (hasAutoChange) {
-      dispatch({
-        type: "ADD_BUDGET_LOG_ENTRY",
-        payload: {
-          description: "Balance adjustment (auto)",
-          changes: autoChanges,
-        },
-      });
-    }
-
     // Update each balance that changed
     let hasChange = false;
     for (const ms of state.moneySources) {
@@ -425,7 +379,7 @@ function EditCurrentBalancesDialog({
       }
     }
 
-    if (hasChange || hasAutoChange) {
+    if (hasChange) {
       toast({ title: "Success", description: "Balances updated." });
     }
     setOpen(false);
