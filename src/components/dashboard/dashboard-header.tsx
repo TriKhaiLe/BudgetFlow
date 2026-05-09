@@ -7,6 +7,7 @@ import { BudgetMonthSelector } from "./budget-month-selector";
 import { HelpDialog } from "./help-dialog";
 import { TemplatesManagementDialog } from "./templates-management-dialog";
 import { StartNewMonthButton } from "./start-new-month-button";
+import { AuthDialog } from "./auth-dialog";
 import {
   Sheet,
   SheetContent,
@@ -44,6 +45,7 @@ export default function DashboardHeader() {
           </SheetHeader>
           <nav className="flex flex-col gap-3 overflow-y-auto flex-1 pr-2 mt-6">
             <StartNewMonthButton />
+            <AuthDialog />
             <TemplatesManagementDialog />
             <AIAssistantDialog />
             <DataManagement />
@@ -56,6 +58,7 @@ export default function DashboardHeader() {
         <BudgetMonthSelector />
         <div className="hidden md:flex items-center gap-2 overflow-x-auto scrollbar-thin min-w-0 scroll-smooth pb-2">
           <StartNewMonthButton />
+          <AuthDialog />
           <TemplatesManagementDialog />
           <AIAssistantDialog />
           <DataManagement />
