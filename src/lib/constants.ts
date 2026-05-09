@@ -55,6 +55,11 @@ export function getHistoryIconConfig(description: string): HistoryIconConfig {
  * Local storage key for persisting budget state.
  */
 export const STORAGE_KEY = 'budgetFlowState';
+export const ANONYMOUS_SESSION_ID_STORAGE_KEY = `${STORAGE_KEY}:anonymous-session-id`;
+
+export function buildBudgetStateStorageKey(scope: string): string {
+  return `${STORAGE_KEY}:${scope}`;
+}
 
 /**
  * Data import strategies.

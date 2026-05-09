@@ -53,3 +53,6 @@ firestore-debug.log
 **/public/worker-*.js.map
 **/public/fallback-*.js
 **/public/swe-worker-*.js
+
+# Backend
+/backend

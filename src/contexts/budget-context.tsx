@@ -9,7 +9,8 @@ import React, {
   Dispatch,
 } from "react";
 import type { BudgetState, MoneySource, BudgetLogTemplate } from "@/lib/types";
-import { STORAGE_KEY } from "@/lib/constants";
+import { STORAGE_KEY, buildBudgetStateStorageKey } from "@/lib/constants";
+import { useOptionalAuth } from "./auth-context";
 import {
   initialBudgetState,
   handleAddMoneySource,
@@ -143,38 +144,67 @@ const BudgetContext = createContext<
 >(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
+  const auth = useOptionalAuth();
   const [state, dispatch] = useReducer(budgetReducer, initialBudgetState);
   const [isInitialized, setIsInitialized] = React.useState(false);
 
+  const storageKey = React.useMemo(() => {
+    if (auth?.storageScope) {
+      return buildBudgetStateStorageKey(auth.storageScope);
+    }
+    return STORAGE_KEY;
+  }, [auth?.storageScope]);
+
+  const isAuthReady = auth ? auth.isInitialized : true;
+
   useEffect(() => {
+    if (!isAuthReady) {
+      setIsInitialized(false);
+      return;
+    }
+
+    setIsInitialized(false);
+
     try {
-      const storedState = localStorage.getItem(STORAGE_KEY);
+      let storedState = localStorage.getItem(storageKey);
+
+      if (!storedState && storageKey !== STORAGE_KEY) {
+        const legacyState = localStorage.getItem(STORAGE_KEY);
+        if (legacyState) {
+          storedState = legacyState;
+          localStorage.setItem(storageKey, legacyState);
+        }
+      }
+
       if (storedState) {
         const parsedState = JSON.parse(storedState) as BudgetState;
         const migratedState = migrateState(parsedState);
         dispatch({ type: "SET_INITIAL_STATE", payload: migratedState });
+      } else {
+        dispatch({ type: "SET_INITIAL_STATE", payload: initialBudgetState });
       }
     } catch (error) {
       console.error("Failed to load state from localStorage", error);
       // If parsing fails, start with a clean slate
       dispatch({ type: "SET_INITIAL_STATE", payload: initialBudgetState });
     }
+
     setIsInitialized(true);
-  }, []);
+  }, [isAuthReady, storageKey]);
 
   useEffect(() => {
-    if (isInitialized) {
+    if (isInitialized && isAuthReady) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(storageKey, JSON.stringify(state));
       } catch (error) {
         console.error("Failed to save state to localStorage", error);
       }
     }
-  }, [state, isInitialized]);
+  }, [state, isInitialized, isAuthReady, storageKey]);
 
   return (
     <BudgetContext.Provider value={{ state, dispatch }}>
-      {isInitialized ? (
+      {isInitialized && isAuthReady ? (
         children
       ) : (
         <div className="flex h-screen items-center justify-center">
