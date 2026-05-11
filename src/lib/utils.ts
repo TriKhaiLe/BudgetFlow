@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
+import { format } from "date-fns"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -24,6 +25,12 @@ export function formatNumberWithCommas(value: number | string): string {
 
 export function parseFormattedNumber(value: string): number {
   return Number(String(value).replace(/,/g, ''));
+}
+
+export function toMonthKey(value: string | Date): string | null {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return format(date, "yyyy-MM");
 }
 
 // Simple hash function to get a color from a string

@@ -3,7 +3,7 @@
 import React from "react";
 import { useBudget } from "@/contexts/budget-context";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, FileJson, Copy, Check } from "lucide-react";
+import { Download, Upload, CloudDownload, CloudUpload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -14,13 +14,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { BudgetState } from "@/lib/types";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { format } from "date-fns";
 
 export function DataManagement() {
-  const { state, dispatch } = useBudget();
+  const {
+    state,
+    dispatch,
+    isSyncEnabled,
+    isSyncing,
+    syncFromCloud,
+    syncToCloud,
+  } = useBudget();
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [importStrategy, setImportStrategy] = React.useState<
@@ -201,7 +219,7 @@ export function DataManagement() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex gap-2 justify-center">
+      <div className="flex flex-wrap gap-2 justify-center">
         <Button
           variant="outline"
           size="sm"
@@ -220,6 +238,70 @@ export function DataManagement() {
           <Upload className="h-4 w-4 mr-2" />
           Export
         </Button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isSyncEnabled || isSyncing}
+              className="whitespace-nowrap flex-shrink-0"
+              title={
+                !isSyncEnabled ? "Sign in to enable cloud sync" : undefined
+              }
+            >
+              <CloudUpload className="h-4 w-4 mr-2" />
+              Sync to Cloud
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Sync to Cloud?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will upload your local data and overwrite the cloud data
+                for the current month.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={syncToCloud}>
+                Sync Now
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isSyncEnabled || isSyncing}
+              className="whitespace-nowrap flex-shrink-0"
+              title={
+                !isSyncEnabled ? "Sign in to enable cloud sync" : undefined
+              }
+            >
+              <CloudDownload className="h-4 w-4 mr-2" />
+              Sync from Cloud
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Sync from Cloud?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will download the cloud data and overwrite your local data
+                for the current month.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={syncFromCloud}>
+                Sync Now
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </>
   );

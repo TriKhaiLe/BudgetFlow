@@ -10,7 +10,13 @@ import React, {
 } from "react";
 import type { BudgetState, MoneySource, BudgetLogTemplate } from "@/lib/types";
 import { STORAGE_KEY, buildBudgetStateStorageKey } from "@/lib/constants";
+import { toMonthKey } from "@/lib/utils";
 import { useOptionalAuth } from "./auth-context";
+import { useToast } from "@/hooks/use-toast";
+import {
+  budgetApiService,
+  BudgetApiError,
+} from "@/services/budget-api-service";
 import {
   initialBudgetState,
   handleAddMoneySource,
@@ -139,14 +145,28 @@ const budgetReducer = (state: BudgetState, action: Action): BudgetState => {
   }
 };
 
-const BudgetContext = createContext<
-  { state: BudgetState; dispatch: Dispatch<Action> } | undefined
->(undefined);
+type BudgetContextValue = {
+  state: BudgetState;
+  dispatch: Dispatch<Action>;
+  isSyncEnabled: boolean;
+  isSyncing: boolean;
+  syncToCloud: () => Promise<void>;
+  syncFromCloud: () => Promise<void>;
+};
+
+const BudgetContext = createContext<BudgetContextValue | undefined>(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const auth = useOptionalAuth();
+  const { toast } = useToast();
   const [state, dispatch] = useReducer(budgetReducer, initialBudgetState);
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isSyncing, setIsSyncing] = React.useState(false);
+  const [serverVersions, setServerVersions] = React.useState<
+    Record<string, number>
+  >({});
+  const stateRef = React.useRef(state);
+  const serverVersionsRef = React.useRef(serverVersions);
 
   const storageKey = React.useMemo(() => {
     if (auth?.storageScope) {
@@ -156,6 +176,20 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   }, [auth?.storageScope]);
 
   const isAuthReady = auth ? auth.isInitialized : true;
+  const isRemoteSyncEnabled = Boolean(
+    auth && auth.isSupabaseConfigured && !auth.isAnonymous,
+  );
+  const monthKey = React.useMemo(() => toMonthKey(state.currentMonth), [
+    state.currentMonth,
+  ]);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    serverVersionsRef.current = serverVersions;
+  }, [serverVersions]);
 
   useEffect(() => {
     if (!isAuthReady) {
@@ -192,6 +226,149 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     setIsInitialized(true);
   }, [isAuthReady, storageKey]);
 
+  const syncFromCloud = React.useCallback(async () => {
+    if (!isRemoteSyncEnabled) {
+      toast({
+        title: "Sync unavailable",
+        description: "Sign in to enable cloud sync.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!monthKey) {
+      toast({
+        title: "Sync unavailable",
+        description: "Current month is invalid.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const token = await auth?.getAccessToken();
+      if (!token) {
+        throw new Error("Missing access token");
+      }
+
+      const response = await budgetApiService.getState(token, monthKey);
+      setServerVersions((prev) => ({
+        ...prev,
+        [monthKey]: response.version,
+      }));
+
+      dispatch({
+        type: "SET_INITIAL_STATE",
+        payload: migrateState(response.state),
+      });
+
+      toast({
+        title: "Synced from cloud",
+        description: "Cloud data loaded into this device.",
+      });
+    } catch (error) {
+      const status =
+        error instanceof BudgetApiError ? error.status : undefined;
+
+      if (status === 404) {
+        toast({
+          title: "No cloud data",
+          description: "No budget data found for this month.",
+          variant: "destructive",
+        });
+      } else {
+        console.error("Failed to sync from cloud", error);
+        toast({
+          title: "Sync failed",
+          description: "Could not load data from the cloud.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [auth, isRemoteSyncEnabled, monthKey, toast]);
+
+  const syncToCloud = React.useCallback(async () => {
+    if (!isRemoteSyncEnabled) {
+      toast({
+        title: "Sync unavailable",
+        description: "Sign in to enable cloud sync.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!monthKey) {
+      toast({
+        title: "Sync unavailable",
+        description: "Current month is invalid.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const token = await auth?.getAccessToken();
+      if (!token) {
+        throw new Error("Missing access token");
+      }
+
+      let version = serverVersionsRef.current[monthKey];
+      if (version === undefined) {
+        try {
+          const remote = await budgetApiService.getState(token, monthKey);
+          version = remote.version;
+        } catch (error) {
+          if (
+            !(error instanceof BudgetApiError && error.status === 404)
+          ) {
+            throw error;
+          }
+          version = 0;
+        }
+      }
+
+      const response = await budgetApiService.upsertState(token, monthKey, {
+        version: version ?? 0,
+        state: stateRef.current,
+      });
+
+      setServerVersions((prev) => ({
+        ...prev,
+        [monthKey]: response.version,
+      }));
+
+      toast({
+        title: "Synced to cloud",
+        description: "Local data uploaded to the cloud.",
+      });
+    } catch (error) {
+      const status =
+        error instanceof BudgetApiError ? error.status : undefined;
+
+      if (status === 409) {
+        toast({
+          title: "Sync conflict",
+          description:
+            "Cloud data changed. Sync from cloud before uploading again.",
+          variant: "destructive",
+        });
+      } else {
+        console.error("Failed to sync to cloud", error);
+        toast({
+          title: "Sync failed",
+          description: "Could not upload data to the cloud.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [auth, isRemoteSyncEnabled, monthKey, toast]);
+
   useEffect(() => {
     if (isInitialized && isAuthReady) {
       try {
@@ -203,7 +380,16 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   }, [state, isInitialized, isAuthReady, storageKey]);
 
   return (
-    <BudgetContext.Provider value={{ state, dispatch }}>
+    <BudgetContext.Provider
+      value={{
+        state,
+        dispatch,
+        isSyncEnabled: isRemoteSyncEnabled,
+        isSyncing,
+        syncToCloud,
+        syncFromCloud,
+      }}
+    >
       {isInitialized && isAuthReady ? (
         children
       ) : (
