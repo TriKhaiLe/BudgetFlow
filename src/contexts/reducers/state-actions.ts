@@ -2,6 +2,7 @@ import type { BudgetState } from '@/lib/types';
 import { startOfMonth } from 'date-fns';
 import { format } from 'date-fns';
 import { appendHistory, createHistoryEntry } from './history-helpers';
+import { createId } from '@/lib/utils';
 
 /**
  * Initial state for the budget context.
@@ -73,7 +74,7 @@ export function handleStartNewMonth(state: BudgetState): BudgetState {
       lastBalanceUpdate: undefined, // Clear timestamp for new month
     })),
     budgetLog: state.moneySources.length > 0 ? [{
-      id: crypto.randomUUID(),
+      id: createId(),
       description: 'Last month balance',
       changes: Object.fromEntries(state.moneySources.map(ms => [ms.id, ms.balance])),
       isInitial: true,
@@ -194,7 +195,7 @@ export function migrateState(parsedState: BudgetState): BudgetState {
       warnings.push('Invalid budgetLogSnapshot reset');
     } else {
       parsedState.budgetLogSnapshot = {
-        id: typeof snapshot.id === 'string' ? snapshot.id : crypto.randomUUID(),
+        id: typeof snapshot.id === 'string' ? snapshot.id : createId(),
         createdAt:
           typeof snapshot.createdAt === 'string'
             ? snapshot.createdAt

@@ -1,5 +1,5 @@
 import type { BudgetState, MoneySource } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, createId } from '@/lib/utils';
 import { appendHistory } from './history-helpers';
 
 /**
@@ -11,14 +11,14 @@ export function handleAddMoneySource(
 ): BudgetState {
   const newSource: MoneySource = {
     ...payload,
-    id: crypto.randomUUID(),
+    id: createId(),
     spent: payload.budget - payload.balance,
   };
 
   const hasInitialBudgetLog = state.budgetLog.some((entry) => entry.isInitial);
   const addSourceEntry = hasInitialBudgetLog
     ? {
-        id: crypto.randomUUID(),
+        id: createId(),
         description: `Add money source: ${newSource.name}`,
         changes: { [newSource.id]: payload.budget },
         isInitial: false,

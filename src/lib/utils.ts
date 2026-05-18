@@ -33,6 +33,16 @@ export function toMonthKey(value: string | Date): string | null {
   return format(date, "yyyy-MM");
 }
 
+export function createId(): string {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 // Simple hash function to get a color from a string
 function simpleHash(str: string) {
   let hash = 0;

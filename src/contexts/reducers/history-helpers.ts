@@ -1,11 +1,12 @@
 import type { HistoryLog } from '@/lib/types';
+import { createId } from '@/lib/utils';
 
 /**
  * Creates a new history log entry with a unique ID and timestamp.
  */
 export function createHistoryEntry(description: string): HistoryLog {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     description,
     timestamp: new Date().toISOString(),
   };

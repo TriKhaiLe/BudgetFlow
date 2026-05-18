@@ -1,6 +1,6 @@
 import type { BudgetState, BudgetLogEntry, BudgetLogSnapshot } from '@/lib/types';
 import { appendHistory } from './history-helpers';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, createId } from '@/lib/utils';
 
 function getTimestamp(iso: string): number {
   const time = new Date(iso).getTime();
@@ -54,7 +54,7 @@ export function handleInitializeBudgetLog(
   });
 
   const initialEntry: BudgetLogEntry = {
-    id: crypto.randomUUID(),
+    id: createId(),
     description: description || 'Initial budget',
     changes,
     isInitial: true,
@@ -91,7 +91,7 @@ export function handleAddBudgetLogEntry(
   const locks = state.budgetLogBalanceLocks || {};
 
   const newEntry: BudgetLogEntry = {
-    id: crypto.randomUUID(),
+    id: createId(),
     description,
     changes,
     isInitial: false,
@@ -230,7 +230,7 @@ export function handleSaveBudgetLogSnapshot(state: BudgetState): BudgetState {
   }));
 
   const snapshot: BudgetLogSnapshot = {
-    id: crypto.randomUUID(),
+    id: createId(),
     createdAt: new Date().toISOString(),
     entryCount: snapshotEntries.length,
     entries: snapshotEntries,

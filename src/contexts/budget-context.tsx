@@ -154,6 +154,21 @@ type BudgetContextValue = {
   syncFromCloud: () => Promise<void>;
 };
 
+function buildSyncState(state: BudgetState): BudgetState {
+  const { budgetLogSnapshot, ...rest } = state;
+  return rest;
+}
+
+function mergeLocalSnapshot(
+  remoteState: BudgetState,
+  localSnapshot: BudgetState["budgetLogSnapshot"],
+): BudgetState {
+  return {
+    ...remoteState,
+    budgetLogSnapshot: localSnapshot ?? null,
+  };
+}
+
 const BudgetContext = createContext<BudgetContextValue | undefined>(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
@@ -179,9 +194,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const isRemoteSyncEnabled = Boolean(
     auth && auth.isSupabaseConfigured && !auth.isAnonymous,
   );
-  const monthKey = React.useMemo(() => toMonthKey(state.currentMonth), [
-    state.currentMonth,
-  ]);
+  const monthKey = React.useMemo(
+    () => toMonthKey(state.currentMonth),
+    [state.currentMonth],
+  );
 
   useEffect(() => {
     stateRef.current = state;
@@ -258,9 +274,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         [monthKey]: response.version,
       }));
 
+      const localSnapshot = stateRef.current.budgetLogSnapshot ?? null;
+
       dispatch({
         type: "SET_INITIAL_STATE",
-        payload: migrateState(response.state),
+        payload: mergeLocalSnapshot(
+          migrateState(response.state),
+          localSnapshot,
+        ),
       });
 
       toast({
@@ -268,8 +289,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         description: "Cloud data loaded into this device.",
       });
     } catch (error) {
-      const status =
-        error instanceof BudgetApiError ? error.status : undefined;
+      const status = error instanceof BudgetApiError ? error.status : undefined;
 
       if (status === 404) {
         toast({
@@ -322,9 +342,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
           const remote = await budgetApiService.getState(token, monthKey);
           version = remote.version;
         } catch (error) {
-          if (
-            !(error instanceof BudgetApiError && error.status === 404)
-          ) {
+          if (!(error instanceof BudgetApiError && error.status === 404)) {
             throw error;
           }
           version = 0;
@@ -333,7 +351,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
       const response = await budgetApiService.upsertState(token, monthKey, {
         version: version ?? 0,
-        state: stateRef.current,
+        state: buildSyncState(stateRef.current),
       });
 
       setServerVersions((prev) => ({
@@ -346,8 +364,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         description: "Local data uploaded to the cloud.",
       });
     } catch (error) {
-      const status =
-        error instanceof BudgetApiError ? error.status : undefined;
+      const status = error instanceof BudgetApiError ? error.status : undefined;
 
       if (status === 409) {
         toast({
