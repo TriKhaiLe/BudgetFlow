@@ -55,6 +55,22 @@ function formatTimestamp(iso?: string): string {
   }
 }
 
+function normalizeTimestamp(iso?: string): string | null {
+  if (!iso) return null;
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return format(parsed, "yyyy-MM-dd HH:mm");
+}
+
+function areTimestampsEqual(a?: string, b?: string): boolean {
+  const normalizedA = normalizeTimestamp(a);
+  const normalizedB = normalizeTimestamp(b);
+  if (normalizedA && normalizedB) {
+    return normalizedA === normalizedB;
+  }
+  return (a || "") === (b || "");
+}
+
 function areChangesEqual(
   oldChanges: Record<string, number>,
   newChanges: Record<string, number>,
@@ -77,7 +93,7 @@ function areEntriesEqual(
 ): boolean {
   return (
     snapshot.description === current.description &&
-    snapshot.createdAt === current.createdAt &&
+    areTimestampsEqual(snapshot.createdAt, current.createdAt) &&
     snapshot.isInitial === current.isInitial &&
     areChangesEqual(snapshot.changes, current.changes)
   );
@@ -170,7 +186,9 @@ export function BudgetLogSnapshotActions() {
         );
       }
 
-      if (snapshotEntry.createdAt !== currentEntry.createdAt) {
+      if (
+        !areTimestampsEqual(snapshotEntry.createdAt, currentEntry.createdAt)
+      ) {
         details.push(
           `Time: ${formatTimestamp(snapshotEntry.createdAt)} -> ${formatTimestamp(currentEntry.createdAt)}`,
         );
