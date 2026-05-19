@@ -17,6 +17,7 @@ import {
   budgetApiService,
   BudgetApiError,
 } from "@/services/budget-api-service";
+import { apiService } from "@/services/api-service";
 import {
   initialBudgetState,
   handleAddMoneySource,
@@ -182,6 +183,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   >({});
   const stateRef = React.useRef(state);
   const serverVersionsRef = React.useRef(serverVersions);
+  const warmupInFlightRef = React.useRef(false);
 
   const storageKey = React.useMemo(() => {
     if (auth?.storageScope) {
@@ -385,6 +387,64 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       setIsSyncing(false);
     }
   }, [auth, isRemoteSyncEnabled, monthKey, toast]);
+
+  const warmUpServer = React.useCallback(async () => {
+    if (!isRemoteSyncEnabled || warmupInFlightRef.current) {
+      return;
+    }
+
+    warmupInFlightRef.current = true;
+    const loadingToast = toast({
+      title: "Warming up server",
+      description: "Checking cloud status...",
+    });
+
+    try {
+      const token = await auth?.getAccessToken();
+      if (!token) {
+        throw new Error("Missing access token");
+      }
+
+      await apiService.getProfile(token);
+
+      loadingToast.update({
+        id: loadingToast.id,
+        title: "Server ready",
+        description: "Cloud sync service is awake.",
+      });
+    } catch (error) {
+      console.error("Failed to warm up server", error);
+      loadingToast.update({
+        id: loadingToast.id,
+        title: "Server check failed",
+        description: "Could not reach the server.",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => {
+        loadingToast.dismiss();
+      }, 2000);
+      warmupInFlightRef.current = false;
+    }
+  }, [auth, isRemoteSyncEnabled, toast]);
+
+  useEffect(() => {
+    if (!isRemoteSyncEnabled) {
+      return;
+    }
+
+    warmUpServer();
+    const intervalId = setInterval(
+      () => {
+        warmUpServer();
+      },
+      5 * 60 * 1000,
+    );
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isRemoteSyncEnabled, warmUpServer]);
 
   useEffect(() => {
     if (isInitialized && isAuthReady) {
