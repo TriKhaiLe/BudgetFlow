@@ -9,7 +9,11 @@ import React, {
   Dispatch,
 } from "react";
 import type { BudgetState, MoneySource, BudgetLogTemplate } from "@/lib/types";
-import { STORAGE_KEY, buildBudgetStateStorageKey } from "@/lib/constants";
+import {
+  STORAGE_KEY,
+  buildBudgetStateStorageKey,
+  buildBudgetVersionStorageKey,
+} from "@/lib/constants";
 import { toMonthKey } from "@/lib/utils";
 import { useOptionalAuth } from "./auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +21,6 @@ import {
   budgetApiService,
   BudgetApiError,
 } from "@/services/budget-api-service";
-import { apiService } from "@/services/api-service";
 import {
   initialBudgetState,
   handleAddMoneySource,
@@ -150,8 +153,11 @@ type BudgetContextValue = {
   state: BudgetState;
   dispatch: Dispatch<Action>;
   isSyncEnabled: boolean;
+  isSyncStatusReady: boolean;
   isSyncing: boolean;
   shouldHighlightSyncFromCloud: boolean;
+  canSyncToCloud: boolean;
+  canSyncFromCloud: boolean;
   syncToCloud: () => Promise<void>;
   syncFromCloud: () => Promise<void>;
 };
@@ -178,14 +184,19 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [state, dispatch] = useReducer(budgetReducer, initialBudgetState);
   const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isSyncStatusReady, setIsSyncStatusReady] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [shouldHighlightSyncFromCloud, setShouldHighlightSyncFromCloud] =
     React.useState(false);
   const [serverVersions, setServerVersions] = React.useState<
     Record<string, number>
   >({});
+  const [localVersions, setLocalVersions] = React.useState<
+    Record<string, number>
+  >({});
   const stateRef = React.useRef(state);
   const serverVersionsRef = React.useRef(serverVersions);
+  const localVersionsRef = React.useRef(localVersions);
   const warmupInFlightRef = React.useRef(false);
 
   const storageKey = React.useMemo(() => {
@@ -193,6 +204,13 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       return buildBudgetStateStorageKey(auth.storageScope);
     }
     return STORAGE_KEY;
+  }, [auth?.storageScope]);
+
+  const versionStorageKey = React.useMemo(() => {
+    if (auth?.storageScope) {
+      return buildBudgetVersionStorageKey(auth.storageScope);
+    }
+    return `${STORAGE_KEY}:versions`;
   }, [auth?.storageScope]);
 
   const isAuthReady = auth ? auth.isInitialized : true;
@@ -213,6 +231,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   }, [serverVersions]);
 
   useEffect(() => {
+    localVersionsRef.current = localVersions;
+  }, [localVersions]);
+
+  useEffect(() => {
     if (!isAuthReady) {
       setIsInitialized(false);
       return;
@@ -222,12 +244,21 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       let storedState = localStorage.getItem(storageKey);
+      let storedVersions = localStorage.getItem(versionStorageKey);
 
       if (!storedState && storageKey !== STORAGE_KEY) {
         const legacyState = localStorage.getItem(STORAGE_KEY);
         if (legacyState) {
           storedState = legacyState;
           localStorage.setItem(storageKey, legacyState);
+        }
+      }
+
+      if (!storedVersions && versionStorageKey !== `${STORAGE_KEY}:versions`) {
+        const legacyVersions = localStorage.getItem(`${STORAGE_KEY}:versions`);
+        if (legacyVersions) {
+          storedVersions = legacyVersions;
+          localStorage.setItem(versionStorageKey, legacyVersions);
         }
       }
 
@@ -238,12 +269,30 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       } else {
         dispatch({ type: "SET_INITIAL_STATE", payload: initialBudgetState });
       }
+
+      if (storedVersions) {
+        try {
+          setLocalVersions(
+            JSON.parse(storedVersions) as Record<string, number>,
+          );
+        } catch (error) {
+          console.error(
+            "Failed to load version cache from localStorage",
+            error,
+          );
+          setLocalVersions({});
+        }
+      } else {
+        setLocalVersions({});
+      }
     } catch (error) {
       console.error("Failed to load state from localStorage", error);
       // If parsing fails, start with a clean slate
       dispatch({ type: "SET_INITIAL_STATE", payload: initialBudgetState });
+      setLocalVersions({});
     }
 
+    setIsSyncStatusReady(false);
     setIsInitialized(true);
   }, [isAuthReady, storageKey]);
 
@@ -252,6 +301,15 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Sync unavailable",
         description: "Sign in to enable cloud sync.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isSyncStatusReady) {
+      toast({
+        title: "Sync unavailable",
+        description: "Cloud status is still loading.",
         variant: "destructive",
       });
       return;
@@ -275,6 +333,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
 
       const response = await budgetApiService.getState(token, monthKey);
       setServerVersions((prev) => ({
+        ...prev,
+        [monthKey]: response.version,
+      }));
+      setLocalVersions((prev) => ({
         ...prev,
         [monthKey]: response.version,
       }));
@@ -314,13 +376,31 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsSyncing(false);
     }
-  }, [auth, isRemoteSyncEnabled, monthKey, toast]);
+  }, [auth, isRemoteSyncEnabled, isSyncStatusReady, monthKey, toast]);
 
   const syncToCloud = React.useCallback(async () => {
     if (!isRemoteSyncEnabled) {
       toast({
         title: "Sync unavailable",
         description: "Sign in to enable cloud sync.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isSyncStatusReady) {
+      toast({
+        title: "Sync unavailable",
+        description: "Cloud status is still loading.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (shouldHighlightSyncFromCloud) {
+      toast({
+        title: "Sync blocked",
+        description: "Cloud data is newer. Sync from cloud first.",
         variant: "destructive",
       });
       return;
@@ -364,6 +444,10 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         [monthKey]: response.version,
       }));
+      setLocalVersions((prev) => ({
+        ...prev,
+        [monthKey]: response.version,
+      }));
       setShouldHighlightSyncFromCloud(false);
 
       toast({
@@ -391,7 +475,14 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsSyncing(false);
     }
-  }, [auth, isRemoteSyncEnabled, monthKey, toast]);
+  }, [
+    auth,
+    isRemoteSyncEnabled,
+    isSyncStatusReady,
+    monthKey,
+    shouldHighlightSyncFromCloud,
+    toast,
+  ]);
 
   const warmUpServer = React.useCallback(async () => {
     if (!isRemoteSyncEnabled || warmupInFlightRef.current) {
@@ -414,20 +505,46 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Missing month key");
       }
 
-      const serverVersion = await budgetApiService.getVersion(token, monthKey);
-      const localVersion = serverVersionsRef.current[monthKey] ?? 0;
-      setShouldHighlightSyncFromCloud(serverVersion.version > localVersion);
+      try {
+        const serverVersion = await budgetApiService.getVersion(
+          token,
+          monthKey,
+        );
+        const localVersion = localVersionsRef.current[monthKey] ?? 0;
 
-      loadingToast.update({
-        id: loadingToast.id,
-        title: "Server ready",
-        description:
-          serverVersion.version > localVersion
-            ? "Cloud has newer data available."
-            : "Cloud data is up to date.",
-      });
+        setIsSyncStatusReady(true);
+        setShouldHighlightSyncFromCloud(serverVersion.version > localVersion);
+        setServerVersions((prev) => ({
+          ...prev,
+          [monthKey]: serverVersion.version,
+        }));
+
+        loadingToast.update({
+          id: loadingToast.id,
+          title: "Server ready",
+          description:
+            serverVersion.version > localVersion
+              ? "Cloud has newer data available."
+              : "Cloud data is up to date.",
+        });
+      } catch (error) {
+        if (error instanceof BudgetApiError && error.status === 404) {
+          setIsSyncStatusReady(true);
+          setShouldHighlightSyncFromCloud(false);
+
+          loadingToast.update({
+            id: loadingToast.id,
+            title: "Server ready",
+            description: "No cloud data exists for this month yet.",
+          });
+          return;
+        }
+
+        throw error;
+      }
     } catch (error) {
       console.error("Failed to warm up server", error);
+      setIsSyncStatusReady(false);
       setShouldHighlightSyncFromCloud(false);
       loadingToast.update({
         id: loadingToast.id,
@@ -442,6 +559,16 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
       warmupInFlightRef.current = false;
     }
   }, [auth, isRemoteSyncEnabled, toast]);
+
+  useEffect(() => {
+    if (isInitialized && isAuthReady) {
+      try {
+        localStorage.setItem(versionStorageKey, JSON.stringify(localVersions));
+      } catch (error) {
+        console.error("Failed to save version cache to localStorage", error);
+      }
+    }
+  }, [isAuthReady, isInitialized, localVersions, versionStorageKey]);
 
   useEffect(() => {
     if (!isRemoteSyncEnabled) {
@@ -477,8 +604,12 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         state,
         dispatch,
         isSyncEnabled: isRemoteSyncEnabled,
+        isSyncStatusReady,
         isSyncing,
         shouldHighlightSyncFromCloud,
+        canSyncToCloud:
+          isSyncStatusReady && !isSyncing && !shouldHighlightSyncFromCloud,
+        canSyncFromCloud: isSyncStatusReady && !isSyncing,
         syncToCloud,
         syncFromCloud,
       }}

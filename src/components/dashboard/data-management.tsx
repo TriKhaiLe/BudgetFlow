@@ -35,8 +35,11 @@ export function DataManagement() {
     state,
     dispatch,
     isSyncEnabled,
+    isSyncStatusReady,
     isSyncing,
     shouldHighlightSyncFromCloud,
+    canSyncToCloud,
+    canSyncFromCloud,
     syncFromCloud,
     syncToCloud,
   } = useBudget();
@@ -245,10 +248,16 @@ export function DataManagement() {
             <Button
               variant="outline"
               size="sm"
-              disabled={!isSyncEnabled || isSyncing}
+              disabled={!isSyncEnabled || !isSyncStatusReady || !canSyncToCloud}
               className="whitespace-nowrap flex-shrink-0"
               title={
-                !isSyncEnabled ? "Sign in to enable cloud sync" : undefined
+                !isSyncEnabled
+                  ? "Sign in to enable cloud sync"
+                  : !isSyncStatusReady
+                    ? "Checking cloud status..."
+                    : shouldHighlightSyncFromCloud
+                      ? "Cloud data is newer. Sync from cloud first."
+                      : undefined
               }
             >
               <CloudUpload className="h-4 w-4 mr-2" />
@@ -277,7 +286,9 @@ export function DataManagement() {
             <Button
               variant="outline"
               size="sm"
-              disabled={!isSyncEnabled || isSyncing}
+              disabled={
+                !isSyncEnabled || !isSyncStatusReady || !canSyncFromCloud
+              }
               className={
                 `whitespace-nowrap flex-shrink-0 transition-all duration-300 ` +
                 (shouldHighlightSyncFromCloud
@@ -285,7 +296,11 @@ export function DataManagement() {
                   : "")
               }
               title={
-                !isSyncEnabled ? "Sign in to enable cloud sync" : undefined
+                !isSyncEnabled
+                  ? "Sign in to enable cloud sync"
+                  : !isSyncStatusReady
+                    ? "Checking cloud status..."
+                    : undefined
               }
             >
               <CloudDownload className="h-4 w-4 mr-2" />

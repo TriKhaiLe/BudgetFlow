@@ -61,6 +61,10 @@ export function buildBudgetStateStorageKey(scope: string): string {
   return `${STORAGE_KEY}:${scope}`;
 }
 
+export function buildBudgetVersionStorageKey(scope: string): string {
+  return `${buildBudgetStateStorageKey(scope)}:versions`;
+}
+
 /**
  * Data import strategies.
  */
