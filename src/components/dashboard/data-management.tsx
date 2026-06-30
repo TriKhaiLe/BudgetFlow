@@ -3,7 +3,13 @@
 import React from "react";
 import { useBudget } from "@/contexts/budget-context";
 import { Button } from "@/components/ui/button";
-import { Download, Upload, CloudDownload, CloudUpload } from "lucide-react";
+import {
+  Download,
+  Upload,
+  CloudDownload,
+  CloudUpload,
+  RefreshCw,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -25,6 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import type { BudgetState } from "@/lib/types";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
@@ -36,10 +43,15 @@ export function DataManagement() {
     dispatch,
     isSyncEnabled,
     isSyncStatusReady,
+    isComparing,
     isSyncing,
     shouldHighlightSyncFromCloud,
     canSyncToCloud,
     canSyncFromCloud,
+    currentVersion,
+    serverVersion,
+    compareResult,
+    compareWithCloud,
     syncFromCloud,
     syncToCloud,
   } = useBudget();
@@ -52,6 +64,7 @@ export function DataManagement() {
     null,
   );
   const [isImportDialogOpen, setIsImportDialogOpen] = React.useState(false);
+  const [isCompareDialogOpen, setIsCompareDialogOpen] = React.useState(false);
 
   const handleExport = () => {
     try {
@@ -223,7 +236,19 @@ export function DataManagement() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex flex-wrap gap-2 justify-center">
+      <div className="flex flex-row items-center justify-center gap-2 text-xs text-muted-foreground">
+        <Badge variant="outline" className="rounded-full px-3 py-1">
+          Local v{currentVersion}
+        </Badge>
+        <Badge
+          variant={serverVersion > currentVersion ? "destructive" : "outline"}
+          className="rounded-full px-3 py-1"
+        >
+          Server v{serverVersion}
+        </Badge>
+      </div>
+
+      <div className="flex flex-nowrap gap-2 justify-center">
         <Button
           variant="outline"
           size="sm"
@@ -281,6 +306,31 @@ export function DataManagement() {
           </AlertDialogContent>
         </AlertDialog>
 
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!isSyncEnabled || !isSyncStatusReady || isComparing}
+          onClick={async () => {
+            const result = await compareWithCloud();
+            if (result) {
+              setIsCompareDialogOpen(true);
+            }
+          }}
+          className="whitespace-nowrap flex-shrink-0"
+          title={
+            !isSyncEnabled
+              ? "Sign in to enable cloud sync"
+              : !isSyncStatusReady
+                ? "Checking cloud status..."
+                : undefined
+          }
+        >
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${isComparing ? "animate-spin" : ""}`}
+          />
+          Fetch & Compare
+        </Button>
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
@@ -324,6 +374,113 @@ export function DataManagement() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+
+      <Dialog open={isCompareDialogOpen} onOpenChange={setIsCompareDialogOpen}>
+        <DialogContent className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Cloud Comparison</DialogTitle>
+            <DialogDescription>
+              Review the cloud snapshot against your local data before syncing.
+            </DialogDescription>
+          </DialogHeader>
+
+          {compareResult ? (
+            <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline">
+                  Local v{compareResult.localVersion}
+                </Badge>
+                <Badge
+                  variant={
+                    compareResult.serverVersion > compareResult.localVersion
+                      ? "destructive"
+                      : "outline"
+                  }
+                >
+                  Server v{compareResult.serverVersion}
+                </Badge>
+                <Badge variant="secondary">{compareResult.month}</Badge>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border p-3">
+                  <div className="mb-2 text-sm font-semibold">
+                    Local Snapshot
+                  </div>
+                  <pre className="whitespace-pre-wrap text-xs leading-5 text-muted-foreground">
+                    {JSON.stringify(compareResult.localState, null, 2)}
+                  </pre>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="mb-2 text-sm font-semibold">
+                    Cloud Snapshot
+                  </div>
+                  <pre className="whitespace-pre-wrap text-xs leading-5 text-muted-foreground">
+                    {JSON.stringify(compareResult.serverState, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="rounded-lg border">
+                <div className="border-b px-3 py-2 text-sm font-semibold">
+                  Diff Summary
+                </div>
+                <div className="divide-y">
+                  {compareResult.rows.map((row) => (
+                    <div
+                      key={row.section}
+                      className="grid gap-2 px-3 py-3 md:grid-cols-[180px_1fr_1fr] md:items-start"
+                    >
+                      <div className="text-sm font-medium">{row.section}</div>
+                      <div className="text-xs text-muted-foreground">
+                        <div className="font-semibold text-foreground">
+                          Local
+                        </div>
+                        <div>{row.localSummary}</div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        <div className="font-semibold text-foreground">
+                          Cloud
+                        </div>
+                        <div>{row.serverSummary}</div>
+                      </div>
+                      <div className="md:col-span-3 text-xs text-muted-foreground">
+                        {row.detail}
+                        <span
+                          className={
+                            row.isDifferent
+                              ? "ml-2 text-amber-600"
+                              : "ml-2 text-emerald-600"
+                          }
+                        >
+                          {row.isDifferent ? "different" : "same"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setIsCompareDialogOpen(false)}
+            >
+              Close
+            </Button>
+            <Button
+              onClick={async () => {
+                await syncFromCloud();
+                setIsCompareDialogOpen(false);
+              }}
+            >
+              Sync from Cloud
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -155,11 +155,34 @@ type BudgetContextValue = {
   isSyncEnabled: boolean;
   isSyncStatusReady: boolean;
   isSyncing: boolean;
+  isComparing: boolean;
   shouldHighlightSyncFromCloud: boolean;
   canSyncToCloud: boolean;
   canSyncFromCloud: boolean;
+  currentVersion: number;
+  serverVersion: number;
+  compareResult: BudgetComparisonResult | null;
   syncToCloud: () => Promise<void>;
   syncFromCloud: () => Promise<void>;
+  compareWithCloud: () => Promise<BudgetComparisonResult | null>;
+};
+
+type BudgetComparisonRow = {
+  section: string;
+  localSummary: string;
+  serverSummary: string;
+  detail: string;
+  isDifferent: boolean;
+};
+
+type BudgetComparisonResult = {
+  month: string;
+  localVersion: number;
+  serverVersion: number;
+  fetchedAt: string;
+  rows: BudgetComparisonRow[];
+  localState: BudgetState;
+  serverState: BudgetState;
 };
 
 function buildSyncState(state: BudgetState): BudgetState {
@@ -177,6 +200,157 @@ function mergeLocalSnapshot(
   };
 }
 
+function summarizeArrayDiff(
+  localItems: Array<{ id?: string }>,
+  serverItems: Array<{ id?: string }>,
+): string {
+  const localMap = new Map(
+    localItems.map((item, index) => [item.id ?? `local-${index}`, item]),
+  );
+  const serverMap = new Map(
+    serverItems.map((item, index) => [item.id ?? `server-${index}`, item]),
+  );
+
+  const added = [...serverMap.keys()].filter((key) => !localMap.has(key));
+  const removed = [...localMap.keys()].filter((key) => !serverMap.has(key));
+  const changed = [...localMap.keys()].filter((key) => {
+    const localItem = localMap.get(key);
+    const serverItem = serverMap.get(key);
+    return (
+      serverItem && JSON.stringify(localItem) !== JSON.stringify(serverItem)
+    );
+  });
+
+  const detailParts: string[] = [];
+  if (added.length > 0) {
+    detailParts.push(
+      `added ${added.slice(0, 3).join(", ")}${added.length > 3 ? "…" : ""}`,
+    );
+  }
+  if (removed.length > 0) {
+    detailParts.push(
+      `removed ${removed.slice(0, 3).join(", ")}${removed.length > 3 ? "…" : ""}`,
+    );
+  }
+  if (changed.length > 0) {
+    detailParts.push(
+      `changed ${changed.slice(0, 3).join(", ")}${changed.length > 3 ? "…" : ""}`,
+    );
+  }
+
+  return detailParts.length > 0
+    ? detailParts.join("; ")
+    : "no item-level differences";
+}
+
+function normalizeRecord(record: Record<string, boolean> | undefined): string {
+  return JSON.stringify(
+    Object.entries(record ?? {})
+      .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+      .reduce<Record<string, boolean>>((accumulator, [key, value]) => {
+        accumulator[key] = value;
+        return accumulator;
+      }, {}),
+  );
+}
+
+function buildComparisonRows(
+  localState: BudgetState,
+  serverState: BudgetState,
+): BudgetComparisonRow[] {
+  const rows: BudgetComparisonRow[] = [];
+
+  const pushRow = (
+    section: string,
+    localSummary: string,
+    serverSummary: string,
+    detail: string,
+    isDifferent: boolean,
+  ) => {
+    rows.push({
+      section,
+      localSummary,
+      serverSummary,
+      detail,
+      isDifferent,
+    });
+  };
+
+  pushRow(
+    "Money sources",
+    `${localState.moneySources.length} items`,
+    `${serverState.moneySources.length} items`,
+    summarizeArrayDiff(localState.moneySources, serverState.moneySources),
+    JSON.stringify(localState.moneySources) !==
+      JSON.stringify(serverState.moneySources),
+  );
+  pushRow(
+    "Templates",
+    `${localState.templates.length} items`,
+    `${serverState.templates.length} items`,
+    summarizeArrayDiff(localState.templates, serverState.templates),
+    JSON.stringify(localState.templates) !==
+      JSON.stringify(serverState.templates),
+  );
+  pushRow(
+    "History",
+    `${localState.history.length} items`,
+    `${serverState.history.length} items`,
+    summarizeArrayDiff(localState.history, serverState.history),
+    JSON.stringify(localState.history) !== JSON.stringify(serverState.history),
+  );
+  pushRow(
+    "Budget log",
+    `${localState.budgetLog.length} items`,
+    `${serverState.budgetLog.length} items`,
+    summarizeArrayDiff(localState.budgetLog, serverState.budgetLog),
+    JSON.stringify(localState.budgetLog) !==
+      JSON.stringify(serverState.budgetLog),
+  );
+  pushRow(
+    "Budget snapshot",
+    localState.budgetLogSnapshot ? "present" : "none",
+    serverState.budgetLogSnapshot ? "present" : "none",
+    localState.budgetLogSnapshot === serverState.budgetLogSnapshot
+      ? "no snapshot difference"
+      : "snapshot presence differs or content differs",
+    JSON.stringify(localState.budgetLogSnapshot) !==
+      JSON.stringify(serverState.budgetLogSnapshot),
+  );
+  pushRow(
+    "Balance locks",
+    `${Object.keys(localState.budgetLogBalanceLocks ?? {}).length} locks`,
+    `${Object.keys(serverState.budgetLogBalanceLocks ?? {}).length} locks`,
+    normalizeRecord(localState.budgetLogBalanceLocks) ===
+      normalizeRecord(serverState.budgetLogBalanceLocks)
+      ? "no lock differences"
+      : "lock map differs",
+    normalizeRecord(localState.budgetLogBalanceLocks) !==
+      normalizeRecord(serverState.budgetLogBalanceLocks),
+  );
+  pushRow(
+    "Current month",
+    localState.currentMonth,
+    serverState.currentMonth,
+    localState.currentMonth === serverState.currentMonth
+      ? "no month difference"
+      : "month differs",
+    localState.currentMonth !== serverState.currentMonth,
+  );
+  pushRow(
+    "Month description",
+    localState.monthDescription ?? "",
+    serverState.monthDescription ?? "",
+    localState.monthDescription === serverState.monthDescription
+      ? "no description difference"
+      : "description differs",
+    (localState.monthDescription ?? "") !==
+      (serverState.monthDescription ?? ""),
+  );
+
+  return rows;
+}
+
 const BudgetContext = createContext<BudgetContextValue | undefined>(undefined);
 
 export const BudgetProvider = ({ children }: { children: ReactNode }) => {
@@ -186,6 +360,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [isSyncStatusReady, setIsSyncStatusReady] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isComparing, setIsComparing] = React.useState(false);
   const [shouldHighlightSyncFromCloud, setShouldHighlightSyncFromCloud] =
     React.useState(false);
   const [serverVersions, setServerVersions] = React.useState<
@@ -194,6 +369,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const [localVersions, setLocalVersions] = React.useState<
     Record<string, number>
   >({});
+  const [compareResult, setCompareResult] =
+    React.useState<BudgetComparisonResult | null>(null);
   const stateRef = React.useRef(state);
   const serverVersionsRef = React.useRef(serverVersions);
   const localVersionsRef = React.useRef(localVersions);
@@ -221,6 +398,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     () => toMonthKey(state.currentMonth),
     [state.currentMonth],
   );
+  const currentVersion = monthKey ? (localVersions[monthKey] ?? 0) : 0;
+  const serverVersion = monthKey ? (serverVersions[monthKey] ?? 0) : 0;
 
   useEffect(() => {
     stateRef.current = state;
@@ -341,6 +520,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         [monthKey]: response.version,
       }));
       setShouldHighlightSyncFromCloud(false);
+      setCompareResult(null);
 
       const localSnapshot = stateRef.current.budgetLogSnapshot ?? null;
 
@@ -449,6 +629,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         [monthKey]: response.version,
       }));
       setShouldHighlightSyncFromCloud(false);
+      setCompareResult(null);
 
       toast({
         title: "Synced to cloud",
@@ -483,6 +664,75 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
     shouldHighlightSyncFromCloud,
     toast,
   ]);
+
+  const compareWithCloud = React.useCallback(async () => {
+    if (!isRemoteSyncEnabled) {
+      toast({
+        title: "Compare unavailable",
+        description: "Sign in to enable cloud sync.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (!isSyncStatusReady) {
+      toast({
+        title: "Compare unavailable",
+        description: "Cloud status is still loading.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    if (!monthKey) {
+      toast({
+        title: "Compare unavailable",
+        description: "Current month is invalid.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    setIsComparing(true);
+    try {
+      const token = await auth?.getAccessToken();
+      if (!token) {
+        throw new Error("Missing access token");
+      }
+
+      const remote = await budgetApiService.getState(token, monthKey);
+      const serverState = migrateState(remote.state);
+      const localState = stateRef.current;
+      const localVersion = localVersionsRef.current[monthKey] ?? 0;
+      const result: BudgetComparisonResult = {
+        month: monthKey,
+        localVersion,
+        serverVersion: remote.version,
+        fetchedAt: new Date().toISOString(),
+        rows: buildComparisonRows(localState, serverState),
+        localState,
+        serverState,
+      };
+
+      setServerVersions((prev) => ({
+        ...prev,
+        [monthKey]: remote.version,
+      }));
+      setShouldHighlightSyncFromCloud(remote.version > localVersion);
+      setCompareResult(result);
+      return result;
+    } catch (error) {
+      console.error("Failed to compare with cloud", error);
+      toast({
+        title: "Compare failed",
+        description: "Could not fetch cloud data for comparison.",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsComparing(false);
+    }
+  }, [auth, isRemoteSyncEnabled, isSyncStatusReady, monthKey, toast]);
 
   const warmUpServer = React.useCallback(async () => {
     if (!isRemoteSyncEnabled || warmupInFlightRef.current) {
@@ -606,12 +856,17 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         isSyncEnabled: isRemoteSyncEnabled,
         isSyncStatusReady,
         isSyncing,
+        isComparing,
         shouldHighlightSyncFromCloud,
         canSyncToCloud:
           isSyncStatusReady && !isSyncing && !shouldHighlightSyncFromCloud,
         canSyncFromCloud: isSyncStatusReady && !isSyncing,
+        currentVersion,
+        serverVersion,
+        compareResult,
         syncToCloud,
         syncFromCloud,
+        compareWithCloud,
       }}
     >
       {isInitialized && isAuthReady ? (
