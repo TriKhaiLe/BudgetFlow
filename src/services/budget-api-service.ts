@@ -16,6 +16,12 @@ export interface BudgetStateResponse {
   state: BudgetState;
 }
 
+export interface BudgetVersionResponse {
+  month: string;
+  version: number;
+  updatedAt: string;
+}
+
 export interface BudgetStateUpdateRequest {
   version: number;
   state: BudgetState;
@@ -91,6 +97,12 @@ export const budgetApiService = {
 
   getState(token: string, month: string): Promise<BudgetStateResponse> {
     return requestJson(token, `/api/budget/state?month=${month}`, {
+      method: "GET",
+    });
+  },
+
+  getVersion(token: string, month: string): Promise<BudgetVersionResponse> {
+    return requestJson(token, `/api/budget/version?month=${month}`, {
       method: "GET",
     });
   },

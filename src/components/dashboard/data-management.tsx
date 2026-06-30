@@ -36,6 +36,7 @@ export function DataManagement() {
     dispatch,
     isSyncEnabled,
     isSyncing,
+    shouldHighlightSyncFromCloud,
     syncFromCloud,
     syncToCloud,
   } = useBudget();
@@ -277,7 +278,12 @@ export function DataManagement() {
               variant="outline"
               size="sm"
               disabled={!isSyncEnabled || isSyncing}
-              className="whitespace-nowrap flex-shrink-0"
+              className={
+                `whitespace-nowrap flex-shrink-0 transition-all duration-300 ` +
+                (shouldHighlightSyncFromCloud
+                  ? "border-primary/60 bg-primary/5 text-primary shadow-sm shadow-primary/10"
+                  : "")
+              }
               title={
                 !isSyncEnabled ? "Sign in to enable cloud sync" : undefined
               }

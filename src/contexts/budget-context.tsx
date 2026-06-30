@@ -151,6 +151,7 @@ type BudgetContextValue = {
   dispatch: Dispatch<Action>;
   isSyncEnabled: boolean;
   isSyncing: boolean;
+  shouldHighlightSyncFromCloud: boolean;
   syncToCloud: () => Promise<void>;
   syncFromCloud: () => Promise<void>;
 };
@@ -178,6 +179,8 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(budgetReducer, initialBudgetState);
   const [isInitialized, setIsInitialized] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [shouldHighlightSyncFromCloud, setShouldHighlightSyncFromCloud] =
+    React.useState(false);
   const [serverVersions, setServerVersions] = React.useState<
     Record<string, number>
   >({});
@@ -275,6 +278,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         [monthKey]: response.version,
       }));
+      setShouldHighlightSyncFromCloud(false);
 
       const localSnapshot = stateRef.current.budgetLogSnapshot ?? null;
 
@@ -360,6 +364,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         [monthKey]: response.version,
       }));
+      setShouldHighlightSyncFromCloud(false);
 
       toast({
         title: "Synced to cloud",
@@ -405,15 +410,25 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Missing access token");
       }
 
-      await apiService.getProfile(token);
+      if (!monthKey) {
+        throw new Error("Missing month key");
+      }
+
+      const serverVersion = await budgetApiService.getVersion(token, monthKey);
+      const localVersion = serverVersionsRef.current[monthKey] ?? 0;
+      setShouldHighlightSyncFromCloud(serverVersion.version > localVersion);
 
       loadingToast.update({
         id: loadingToast.id,
         title: "Server ready",
-        description: "Cloud sync service is awake.",
+        description:
+          serverVersion.version > localVersion
+            ? "Cloud has newer data available."
+            : "Cloud data is up to date.",
       });
     } catch (error) {
       console.error("Failed to warm up server", error);
+      setShouldHighlightSyncFromCloud(false);
       loadingToast.update({
         id: loadingToast.id,
         title: "Server check failed",
@@ -463,6 +478,7 @@ export const BudgetProvider = ({ children }: { children: ReactNode }) => {
         dispatch,
         isSyncEnabled: isRemoteSyncEnabled,
         isSyncing,
+        shouldHighlightSyncFromCloud,
         syncToCloud,
         syncFromCloud,
       }}
